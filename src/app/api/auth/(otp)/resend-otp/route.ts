@@ -27,8 +27,6 @@ export async function POST(req: Request) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const tokenHash = await bcrypt.hash(otp, 10);
 
-    console.log(`Resent OTP for ${email}: ${otp}`);
-
     // Upsert OTP record
     await prisma.emailOtp.upsert({
       where: { email },

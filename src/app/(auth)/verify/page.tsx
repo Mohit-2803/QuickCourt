@@ -201,7 +201,7 @@ export default function VerifyOtpPage() {
                 type="submit"
                 className="w-full cursor-pointer"
                 size="lg"
-                disabled={loading || form.getValues("otp").length !== 6}
+                disabled={loading}
               >
                 {loading ? "Verifying..." : "Verify OTP"}
               </Button>

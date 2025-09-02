@@ -46,14 +46,14 @@ export async function POST(req: Request) {
       where: { email },
       update: {
         tokenHash,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // reset expiry
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         attempts: 0,
         verified: false,
       },
       create: {
         email,
         tokenHash,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         attempts: 0,
         verified: false,
       },

@@ -26,6 +26,7 @@ model User {
   updatedAt      DateTime       @updatedAt
   Session        Session[]
   Account        Account[]
+  PasswordResetToken PasswordResetToken[]
 }
 
 model FacilityOwner {
@@ -149,6 +150,21 @@ model EmailOtp {
   @@index([email])
   @@index([expiresAt])
 }
+
+model PasswordResetToken {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  tokenHash   String  
+  expiresAt   DateTime 
+  used        Boolean  @default(false) 
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@unique([tokenHash])
+}
+
 
 // Optional NextAuth-compatible Session / Account models (helpful if you decide to use NextAuth adapter)
 model Session {
