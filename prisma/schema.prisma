@@ -10,22 +10,22 @@ datasource db {
 
 // Models
 model User {
-  id             Int            @id @default(autoincrement())
-  email          String         @unique
-  fullName       String
-  avatarUrl      String?
-  avatarPublicId String?
-  passwordHash   String
-  role           Role           @default(USER)
-  emailVerified  Boolean        @default(false)
-  ownerProfile   FacilityOwner?
-  ownerProfileId Int?
-  bookings       Booking[]
-  reviews        Review[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  Session        Session[]
-  Account        Account[]
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique
+  fullName           String
+  avatarUrl          String?
+  avatarPublicId     String?
+  passwordHash       String
+  role               Role                 @default(USER)
+  emailVerified      Boolean              @default(false)
+  ownerProfile       FacilityOwner?
+  ownerProfileId     Int?
+  bookings           Booking[]
+  reviews            Review[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  Session            Session[]
+  Account            Account[]
   PasswordResetToken PasswordResetToken[]
 }
 
@@ -73,6 +73,7 @@ model Court {
   venueId      Int
   name         String
   sport        String // e.g., "Badminton", "Tennis", "Football"
+  image        String
   pricePerHour Int // store in smallest currency unit (e.g., INR paisa OR cents)
   currency     String    @default("INR")
   openTime     Int // hour in 24h, e.g., 6
@@ -152,19 +153,18 @@ model EmailOtp {
 }
 
 model PasswordResetToken {
-  id          Int      @id @default(autoincrement())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      Int
-  tokenHash   String  
-  expiresAt   DateTime 
-  used        Boolean  @default(false) 
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  tokenHash String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 
+  @@unique([tokenHash])
   @@index([userId])
   @@index([expiresAt])
-  @@unique([tokenHash])
 }
-
 
 // Optional NextAuth-compatible Session / Account models (helpful if you decide to use NextAuth adapter)
 model Session {

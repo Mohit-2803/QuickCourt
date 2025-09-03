@@ -26,13 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 
 export function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
-
+  
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -40,8 +41,12 @@ export function SignupForm() {
       email: "",
       password: "",
       role: "USER",
+      businessName: "",
+      ownerAddress: "",
+      phone: "",
     },
   });
+  const role = form.watch("role");
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -195,9 +200,54 @@ export function SignupForm() {
           )}
         />
 
+        {/* Owner-only fields */}
+        {role === "OWNER" && (
+          <div className="grid grid-cols-1 gap-4">
+            <FormField
+              control={form.control}
+              name="businessName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="QuickCourt Pvt Ltd" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ownerAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="12 MG Road, Bengaluru" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+91 98765 43210" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
         <Button
           type="submit"
-          className="w-full"
+          className="w-full cursor-pointer"
           disabled={loading || uploading}
         >
           {loading ? "Signing up..." : "Sign Up"}
@@ -205,12 +255,9 @@ export function SignupForm() {
 
         <p className="text-center text-sm mt-2">
           Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-green-600 hover:underline cursor-pointer"
-          >
+          <Link href="/login" className="text-green-600 hover:underline">
             Login
-          </a>
+          </Link>
         </p>
       </form>
     </Form>

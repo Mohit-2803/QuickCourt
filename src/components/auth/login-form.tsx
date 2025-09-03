@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -18,9 +18,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { loginSchema } from "@/lib/validation";
+import Link from "next/link";
 
 export function LoginForm() {
   const router = useRouter();
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -41,7 +43,9 @@ export function LoginForm() {
       toast.error(res.error);
     } else {
       toast.success("Login successful!");
-      router.push("/");
+      const session = await getSession();
+      const isManager = session?.user?.role === "OWNER";
+      router.push(isManager ? "/manager/dashboard" : "/");
     }
   }
 
@@ -76,27 +80,29 @@ export function LoginForm() {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full cursor-pointer"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Signing in..." : "Login"}
         </Button>
+
         <p className="text-center text-sm mt-2">
           Dont have an account?{" "}
-          <a
-            href="/signup"
-            className="text-green-600 hover:underline cursor-pointer"
-          >
+          <Link href="/signup" className="text-green-600 hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
 
         {/* forgot password */}
         <p className="text-center text-sm mt-2">
-          <a
+          <Link
             href="/forgot-password"
             className="text-green-600 hover:underline cursor-pointer"
           >
             Forgot your password?
-          </a>
+          </Link>
         </p>
       </form>
     </Form>

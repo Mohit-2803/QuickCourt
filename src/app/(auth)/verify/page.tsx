@@ -32,7 +32,7 @@ export default function VerifyOtpPage() {
   const emailFromQuery = searchParams.get("email") || "";
 
   const [loading, setLoading] = useState(false);
-  const [cooldown, setCooldown] = useState(10); // seconds until resend enabled
+  const [cooldown, setCooldown] = useState(60);
 
   const form = useForm<VerifyOtpSchema>({
     resolver: zodResolver(verifyOtpSchema),
@@ -93,13 +93,12 @@ export default function VerifyOtpPage() {
       toast.success("OTP resent. Check inbox/spam.");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to resend OTP");
-      setCooldown(0); // let user try again if server failed
+      setCooldown(0);
     }
   }
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      {/* Left visual */}
       <div className="hidden md:flex items-center justify-center bg-muted/40">
         <Image
           src="/otp-image.jpg"
@@ -111,7 +110,6 @@ export default function VerifyOtpPage() {
         />
       </div>
 
-      {/* Right content */}
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-md rounded-2xl border bg-background/95 p-6 shadow-sm backdrop-blur">
           <div className="mb-6 text-center">
@@ -125,7 +123,6 @@ export default function VerifyOtpPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* Email (readonly) */}
               <FormField
                 control={form.control}
                 name="email"
@@ -145,7 +142,6 @@ export default function VerifyOtpPage() {
                 )}
               />
 
-              {/* OTP */}
               <FormField
                 control={form.control}
                 name="otp"
@@ -157,7 +153,6 @@ export default function VerifyOtpPage() {
                         maxLength={6}
                         value={field.value}
                         onChange={field.onChange}
-                        // numeric pattern helps mobile keyboards
                         pattern="\d*"
                         containerClassName="justify-center"
                       >

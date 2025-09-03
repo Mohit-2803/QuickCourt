@@ -1,4 +1,3 @@
-// app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { signupSchema } from "@/lib/validation";
@@ -8,7 +7,6 @@ import { sendOTPEMail } from "@/lib/mailer";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const parsed = signupSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -17,7 +15,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password, role } = parsed.data;
+    const {
+      name,
+      email,
+      password,
+      role,
+      image,
+      businessName,
+      ownerAddress,
+      phone,
+    } = parsed.data;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -27,18 +34,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    await prisma.user.create({
+    // Create user
+    const user = await prisma.user.create({
       data: {
         fullName: name,
         email,
-        passwordHash: hashedPassword,
+        passwordHash,
         role,
         emailVerified: false,
+        avatarUrl: image,
       },
+      select: { id: true, role: true },
     });
 
+    // If owner, create FacilityOwner profile
+    if (role === "OWNER") {
+      await prisma.facilityOwner.create({
+        data: {
+          userId: user.id,
+          businessName: businessName || null,
+          address: ownerAddress || null,
+          phone: phone || null,
+        },
+      });
+    }
+
+    // Issue OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const tokenHash = await bcrypt.hash(otp, 10);
 
@@ -60,7 +83,6 @@ export async function POST(req: Request) {
     });
 
     await sendOTPEMail(email, otp);
-
     return NextResponse.json(
       { message: "Signup successful, OTP sent!" },
       { status: 201 }

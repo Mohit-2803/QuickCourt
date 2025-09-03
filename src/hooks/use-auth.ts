@@ -15,8 +15,11 @@ export function useAuth() {
   const isLoading = status === "loading";
   const isUnauthenticated = status === "unauthenticated";
 
+  const userRole = session?.user?.role || session?.role || null;
+
   return {
     user: session?.user || null,
+    role: userRole,
     isAuthenticated,
     isLoading,
     isUnauthenticated,

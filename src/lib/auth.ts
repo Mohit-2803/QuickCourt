@@ -64,8 +64,20 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.id = token.id as string;
         session.role = token.role as string;
+        // Also set the role in the user object
+        if (session.user) {
+          session.user.id = token.id as string;
+          session.user.role = token.role as string;
+        }
       }
       return session;
+    },
+
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      return baseUrl;
     },
   },
 
