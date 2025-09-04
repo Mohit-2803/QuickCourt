@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Pencil, Star } from "lucide-react";
+import { MapPin, Pencil } from "lucide-react";
 
 type VenueCard = {
   id: number;
@@ -22,12 +22,11 @@ type VenueCard = {
   state?: string | null;
   country?: string | null;
   approved: boolean;
-  rating?: number | null;
   photos: string[];
   amenities: string[];
   createdAt: string | Date;
   updatedAt: string | Date;
-  courtsCount: number; // new
+  courtsCount: number;
 };
 
 export default function VenuesGrid({ venues }: { venues: VenueCard[] }) {
@@ -79,14 +78,8 @@ export default function VenuesGrid({ venues }: { venues: VenueCard[] }) {
               <p className="line-clamp-2 text-sm text-muted-foreground">
                 {v.description}
               </p>
-              <div className="mt-3 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  {v.courtsCount} courts
-                </div>
-                <div className="flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 fill-foreground/80 text-foreground" />
-                  <span>{v.rating?.toFixed(1) ?? "—"}</span>
-                </div>
+              <div className="mt-3 text-sm text-muted-foreground">
+                {v.courtsCount} courts
               </div>
             </CardContent>
             <CardFooter className="flex items-center justify-between">

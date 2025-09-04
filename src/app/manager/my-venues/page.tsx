@@ -31,16 +31,24 @@ export default async function MyVenuesPage() {
   }));
 
   return (
-    <div className="mx-auto w-full max-w-7xl p-6 md:p-8 space-y-6">
+    <div className="mx-auto w-full max-w-7xl p-6 md:p-8 space-y-6 min-h-screen">
       <VenueHeaderAndButton total={venues.length} />
 
-      <Suspense
-        fallback={<div className="h-32 rounded-xl bg-muted animate-pulse" />}
-      >
-        <div className="space-y-6">
-          <VenuesGrid venues={venues} />
+      {venues.length === 0 ? (
+        <div className="rounded-xl border bg-card text-card-foreground p-6">
+          <p className="text-sm text-muted-foreground">
+            No venues yet. Use the button above to add your first venue.
+          </p>
         </div>
-      </Suspense>
+      ) : (
+        <Suspense
+          fallback={<div className="h-32 rounded-xl bg-muted animate-pulse" />}
+        >
+          <div className="space-y-6">
+            <VenuesGrid venues={venues} />
+          </div>
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -19,7 +19,6 @@ type Props = {
 export function CourtMain({ court }: Props) {
   return (
     <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Left: image */}
       <div className="lg:col-span-6 rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
         <div className="relative h-64 md:h-96 w-full bg-muted">
           <Image
@@ -31,7 +30,6 @@ export function CourtMain({ court }: Props) {
         </div>
       </div>
 
-      {/* Right: info + map placeholder */}
       <div className="lg:col-span-6 space-y-6">
         <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
           <CardContent className="p-5 space-y-3">

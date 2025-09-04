@@ -183,7 +183,7 @@ export default function VenueForm() {
               <FormControl>
                 <Textarea
                   rows={4}
-                  placeholder="Short description of the venue..."
+                  placeholder="Description of the venue..."
                   {...field}
                 />
               </FormControl>
@@ -377,6 +377,7 @@ export default function VenueForm() {
                   <Button
                     type="button"
                     variant="outline"
+                    className="cursor-pointer"
                     onClick={() => {
                       setLocalFiles([]);
                       setUploadErrors({});
@@ -388,6 +389,7 @@ export default function VenueForm() {
                     type="button"
                     onClick={handleUploadSelected}
                     disabled={uploading || !localFiles.length}
+                    className="cursor-pointer"
                   >
                     {uploading ? "Uploading..." : "Upload selected"}
                   </Button>
