@@ -9,16 +9,13 @@ export function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold shadow">
-                SB
-              </span>
-              <span className="text-lg font-semibold text-green-700">
-                SportBook
+              <span className="text-lg font-bold text-gray-700">
+                QuickCourt
               </span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
               Book your favorite sports venues easily and quickly with
-              SportBook. Play more, plan less.
+              QuickCourt. Play more, plan less.
             </p>
           </div>
 
@@ -26,7 +23,7 @@ export function Footer() {
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:col-span-2">
             <div>
               <h4 className="text-sm font-semibold text-gray-900">Company</h4>
-              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground font-medium">
                 <li>
                   <Link href="/about">About Us</Link>
                 </li>
@@ -41,7 +38,7 @@ export function Footer() {
 
             <div>
               <h4 className="text-sm font-semibold text-gray-900">Support</h4>
-              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground font-medium">
                 <li>
                   <Link href="/help">Help Center</Link>
                 </li>
@@ -73,7 +70,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="mt-10 border-t pt-6 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} SportBook. All rights reserved.
+          © {new Date().getFullYear()} QuickCourt. All rights reserved.
         </div>
       </div>
     </footer>

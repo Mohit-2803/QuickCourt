@@ -128,14 +128,16 @@ export function Navbar() {
     return (
       <div className={cn("flex gap-2", mobile && "flex-col")}>
         <Link href="/login">
-          <Button className={cn("rounded-full", mobile && "w-full")}>
+          <Button
+            className={cn("rounded-full cursor-pointer", mobile && "w-full")}
+          >
             Login
           </Button>
         </Link>
         <Link href="/signup">
           <Button
             variant="outline"
-            className={cn("rounded-full", mobile && "w-full")}
+            className={cn("rounded-full cursor-pointer", mobile && "w-full")}
           >
             Signup
           </Button>

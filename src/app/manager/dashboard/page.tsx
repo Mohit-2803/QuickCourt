@@ -6,6 +6,11 @@ import { EarningsChart } from "@/components/manager/dashboard/earnings-chart";
 import { BookingCalendar } from "@/components/manager/dashboard/booking-calendar";
 import { RecentBookings } from "@/components/manager/dashboard/recent-bookings";
 
+export const metadata = {
+  title: "Dashboard",
+  description: "Overview of your sports venue management.",
+};
+
 export default async function ManagerDashboardPage() {
   // Fetch initial stats from backend (mock for now)
   const stats = {

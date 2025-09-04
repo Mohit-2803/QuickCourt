@@ -407,10 +407,15 @@ export default function VenueForm() {
         />
 
         <div className="flex items-center justify-end gap-3">
-          <Button type="button" variant="ghost" onClick={() => router.back()}>
+          <Button
+            type="button"
+            className="cursor-pointer bg-red-500 text-white hover:bg-red-600 hover:shadow-md hover:text-white"
+            variant="ghost"
+            onClick={() => router.back()}
+          >
             Cancel
           </Button>
-          <Button type="submit" disabled={uploading}>
+          <Button type="submit" className="cursor-pointer" disabled={uploading}>
             {uploading ? "Please wait..." : "Create Venue"}
           </Button>
         </div>

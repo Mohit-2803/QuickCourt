@@ -33,7 +33,7 @@ export function SignupForm() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
-  
+
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -119,9 +119,9 @@ export function SignupForm() {
               className="object-cover"
             />
           </div>
-          <label className="cursor-pointer text-sm flex items-center gap-1">
+          <label className="cursor-pointer text-sm flex items-center gap-1 outline-1 p-2 rounded-4xl hover:bg-accent hover:text-accent-foreground border">
             <Upload className="w-4 h-4" />
-            <span>{uploading ? "Uploading..." : "Upload Avatar"}</span>
+            <span>{uploading ? "Uploading..." : "Change Avatar"}</span>
             <input
               type="file"
               accept="image/*"
@@ -186,7 +186,7 @@ export function SignupForm() {
               <FormLabel>Role</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="cursor-pointer">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                 </FormControl>

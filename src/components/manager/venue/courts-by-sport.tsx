@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CourtCard from "./court-card";
 
@@ -17,7 +17,7 @@ type Court = {
 
 export default function CourtsBySport({ courts }: { courts: Court[] }) {
   // Group courts by sport
-  const bySport = React.useMemo(() => {
+  const bySport = useMemo(() => {
     return courts.reduce<Record<string, Court[]>>((acc, c) => {
       (acc[c.sport] = acc[c.sport] || []).push(c);
       return acc;

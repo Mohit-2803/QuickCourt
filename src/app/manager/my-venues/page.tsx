@@ -4,6 +4,11 @@ import VenuesGrid from "@/components/manager/venue/venues-grid";
 import { VenueHeaderAndButton } from "@/components/manager/venue/add-venue-button";
 import { getOwnerVenues } from "@/app/actions/manager/venue-actions";
 
+export const metadata = {
+  title: "My Venues",
+  description: "Manage your sports venues.",
+};
+
 export default async function MyVenuesPage() {
   const res = await getOwnerVenues();
 

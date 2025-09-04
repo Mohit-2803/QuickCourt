@@ -8,13 +8,13 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const parsed = signupSchema.safeParse(body);
+
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
-
     const {
       name,
       email,

@@ -98,19 +98,12 @@ export default function VerifyOtpPage() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      <div className="hidden md:flex items-center justify-center bg-muted/40">
-        <Image
-          src="/otp-image.jpg"
-          alt="Verify OTP"
-          width={480}
-          height={480}
-          className="h-auto w-[420px] rounded-xl shadow-sm"
-          priority
-        />
+    <div className="flex min-h-screen">
+      <div className="hidden lg:flex w-1/2 relative">
+        <Image src="/otp.jpg" alt="Verify OTP" fill className="object-cover" />
       </div>
 
-      <div className="flex items-center justify-center p-6">
+      <div className="flex w-full lg:w-1/2 items-center justify-center p-6">
         <div className="w-full max-w-md rounded-2xl border bg-background/95 p-6 shadow-sm backdrop-blur">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">

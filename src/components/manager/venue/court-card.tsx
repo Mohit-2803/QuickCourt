@@ -14,17 +14,17 @@ type Court = {
   id: number;
   name: string;
   sport: string;
-  image: string; // URL for court photo
-  pricePerHour: number; // INR
+  image: string;
+  pricePerHour: number;
   currency: string;
-  openTime: number; // 6
-  closeTime: number; // 22
+  openTime: number;
+  closeTime: number;
 };
 
 export default function CourtCard({ court }: { court: Court }) {
   return (
-    <Card className="overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm">
-      <div className="relative h-40 w-full bg-muted">
+    <Card className="overflow-hidden rounded-2xl border py-0 pb-6 bg-card text-card-foreground shadow-sm">
+      <div className="relative h-48 w-full bg-muted">
         {court.image && (
           <Image
             src={court.image}
@@ -40,15 +40,20 @@ export default function CourtCard({ court }: { court: Court }) {
       {/* Header */}
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">{court.name}</CardTitle>
-        <div className="text-sm text-muted-foreground">{court.sport}</div>
+        <div className="text-sm text-muted-foreground font-medium">
+          <span>Sport - </span>
+          {court.sport}
+        </div>
       </CardHeader>
 
       {/* Content */}
       <CardContent className="pt-0">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground font-medium">
           Hours: {court.openTime}:00 - {court.closeTime}:00
         </div>
-        <div className="mt-1 text-sm">Price: ₹{court.pricePerHour} / hour</div>
+        <div className="mt-1 text-md font-medium">
+          Price: ₹{court.pricePerHour} / hour
+        </div>
       </CardContent>
 
       {/* Actions */}

@@ -9,7 +9,7 @@ export const signupSchema = z
       .min(6, "Password must be at least 6 characters")
       .max(32, "Password must be less than 32 characters"),
     role: z.enum(["USER", "OWNER"], { message: "Please select a role" }),
-    image: z.string().url().optional(),
+    image: z.string().url().nullable().optional(),
     businessName: z.string().optional(),
     ownerAddress: z.string().optional(),
     phone: z.string().optional(),

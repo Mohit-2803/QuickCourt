@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import Link from "next/link";
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
@@ -25,9 +26,7 @@ export default function ForgotPasswordPage() {
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: {
-      email: "",
-    },
+    defaultValues: { email: "" },
   });
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
@@ -46,9 +45,7 @@ export default function ForgotPasswordPage() {
         return;
       }
 
-      toast.success(
-        "If that email exists in our system, a reset link has been sent."
-      );
+      toast.success("If that email exists, a reset link has been sent.");
     } catch {
       toast.error("Error sending reset email");
     } finally {
@@ -57,48 +54,80 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex h-screen">
-      <div className="hidden lg:flex w-1/2 relative">
+    <div className="grid min-h-svh w-full grid-cols-1 lg:grid-cols-2">
+      {/* Left side image */}
+      <div className="relative hidden lg:block">
         <Image
-          src="/login_img.jpg"
+          src="/otp-image.jpg"
           alt="Forgot Password"
           fill
-          className="object-cover"
           priority
+          className="object-cover"
         />
+        {/* Optional overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-background/40 to-transparent" />
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6">
-        <div className="max-w-md w-full">
-          <h1 className="text-2xl font-bold mb-6 text-center">
-            Forgot Password
-          </h1>
+      {/* Right side form */}
+      <div className="flex items-center justify-center p-6 md:p-10">
+        <div className="w-full max-w-md">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold text-foreground">
+              Forgot Password
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Enter the email used for the account.
+            </p>
+          </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your email"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          placeholder="you@example.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
-              </Button>
-            </form>
-          </Form>
+                <Button
+                  type="submit"
+                  className="w-full cursor-pointer"
+                  disabled={loading}
+                >
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </Button>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  A link to reset the password will be sent if the email is
+                  registered.
+                </p>
+              </form>
+            </Form>
+          </div>
+
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Remembered it?{" "}
+            <Link href="/login" className="underline">
+              Back to Login
+            </Link>
+          </p>
         </div>
       </div>
     </div>

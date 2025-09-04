@@ -45,7 +45,7 @@ export function LoginForm() {
       toast.success("Login successful!");
       const session = await getSession();
       const isManager = session?.user?.role === "OWNER";
-      router.push(isManager ? "/manager/dashboard" : "/");
+      router.push(isManager ? "/manager/dashboard" : "/player");
     }
   }
 

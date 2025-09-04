@@ -120,16 +120,26 @@ export default function AddCourtForm({ slug }: { slug: string }) {
               <FormLabel>Sport</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="cursor-pointer">
                     <SelectValue placeholder="Select sport" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Badminton">Badminton</SelectItem>
-                  <SelectItem value="Tennis">Tennis</SelectItem>
-                  <SelectItem value="Football">Football</SelectItem>
-                  <SelectItem value="Squash">Squash</SelectItem>
-                  <SelectItem value="Table Tennis">Table Tennis</SelectItem>
+                  <SelectItem className="cursor-pointer" value="Badminton">
+                    Badminton
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="Tennis">
+                    Tennis
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="Football">
+                    Football
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="Squash">
+                    Squash
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="Table Tennis">
+                    Table Tennis
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>Choose a sport type.</FormDescription>
@@ -170,7 +180,12 @@ export default function AddCourtForm({ slug }: { slug: string }) {
               <FormItem>
                 <FormLabel>Currency</FormLabel>
                 <FormControl>
-                  <Input placeholder="INR" {...field} />
+                  <Input
+                    placeholder="INR"
+                    disabled
+                    className="text-black"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -233,7 +248,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
           name="image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Court image (optional)</FormLabel>
+              <FormLabel>Court image</FormLabel>
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="https://..."
@@ -243,6 +258,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
                 <input
                   type="file"
                   accept="image/*"
+                  className="cursor-pointer outline-1 rounded-md border bg-transparent px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:py-2 file:px-3 file:text-sm file:font-medium file:text-muted-foreground hover:file:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setLocalFile(file);
@@ -253,8 +269,9 @@ export default function AddCourtForm({ slug }: { slug: string }) {
                   variant="outline"
                   onClick={handleUpload}
                   disabled={!localFile || uploading}
+                  className="cursor-pointer"
                 >
-                  {uploading ? "Uploading..." : "Upload"}
+                  {uploading ? "Uploading..." : "Upload image"}
                 </Button>
               </div>
               <FormDescription>
@@ -266,10 +283,19 @@ export default function AddCourtForm({ slug }: { slug: string }) {
         />
 
         <div className="flex items-center justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={() => router.back()}>
+          <Button
+            type="button"
+            className="cursor-pointer bg-red-500 text-white hover:bg-red-600 hover:shadow-md hover:text-white"
+            variant="ghost"
+            onClick={() => router.back()}
+          >
             Cancel
           </Button>
-          <Button type="submit" disabled={saving || uploading}>
+          <Button
+            type="submit"
+            className="cursor-pointer"
+            disabled={saving || uploading}
+          >
             {saving ? "Saving..." : "Create Court"}
           </Button>
         </div>

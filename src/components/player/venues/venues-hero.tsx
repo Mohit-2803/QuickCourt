@@ -1,0 +1,182 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+
+type Suggestion = {
+  name?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  lat?: number;
+  lon?: number;
+  formatted?: string;
+};
+
+const GEOAPIFY_URL = "https://api.geoapify.com/v1/geocode/autocomplete";
+const GEOAPIFY_API_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_KEY;
+
+export function VenuesHero({ images }: { images: string[] }) {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<Suggestion[]>([]);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Debounce
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setResults([]);
+      setOpen(false);
+      return;
+    }
+    const t = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          text: query,
+          type: "city",
+          filter: "countrycode:in",
+          format: "json",
+          apiKey: GEOAPIFY_API_KEY || "",
+          limit: "8",
+        });
+        const res = await fetch(`${GEOAPIFY_URL}?${params.toString()}`);
+        if (!res.ok) throw new Error("Geoapify request failed");
+        const data = await res.json();
+
+        // JSON format returns array in results
+        const items: Suggestion[] = data?.results ?? [];
+        const mapped: Suggestion[] = items.map((it) => ({
+          name: it.name,
+          city: it.city,
+          state: it.state,
+          country: it.country,
+          lat: it.lat,
+          lon: it.lon,
+          formatted: it.formatted,
+        }));
+        setResults(mapped);
+        setOpen(mapped.length > 0);
+      } catch {
+        setResults([]);
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  function selectSuggestion(s: Suggestion) {
+    setLoading(false);
+    setResults([]);
+    const city = s.formatted?.split(",")[0] || s.city || s.name || "";
+    setQuery(s.city || city || "");
+    setOpen(false);
+    router.push(
+      `/venues/venue-booking?city=${encodeURIComponent(s.city || city || "")}`
+    );
+  }
+
+  return (
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+      <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col justify-center">
+        <h1 className="text-2xl md:text-3xl font-semibold">
+          Find sports venues near you
+        </h1>
+        <p className="mt-2 text-muted-foreground w-3/4">
+          Seamlessly explore sports venues and play with sports enthusiasts just
+          like you!
+        </p>
+
+        <div className="mt-4 space-y-3 w-3/4">
+          <div className="relative self-center my-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Enter city (e.g., Ahmedabad)"
+              className="pl-9"
+              aria-label="Search city"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => results.length && setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 150)}
+            />
+            {open && (
+              <ul
+                ref={listRef}
+                className={cn(
+                  "absolute z-20 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md",
+                  "max-h-64 overflow-auto"
+                )}
+              >
+                {loading && (
+                  <li className="px-3 py-2 text-sm text-muted-foreground font-medium">
+                    Searching…
+                  </li>
+                )}
+                {!loading && results.length === 0 && (
+                  <li className="px-3 py-2 text-sm text-muted-foreground">
+                    No results
+                  </li>
+                )}
+                {!loading &&
+                  results.map((s, idx) => (
+                    <li
+                      key={`${s.lat}-${s.lon}-${idx}`}
+                      className="cursor-pointer px-3 py-2 hover:bg-accent"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        selectSuggestion(s);
+                      }}
+                    >
+                      <div className="text-sm">
+                        {s.city || s.name || s.formatted}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {[s.state, s.country].filter(Boolean).join(", ")}
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {images.map((src, i) => (
+              <CarouselItem key={i}>
+                <div className="relative h-64 md:h-80 w-full">
+                  <Image
+                    src={src}
+                    alt={`Venue ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    priority={i === 0}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </div>
+    </section>
+  );
+}

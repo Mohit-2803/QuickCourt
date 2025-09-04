@@ -4,6 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import CourtsBySport from "@/components/manager/venue/courts-by-sport";
 import { getVenueBySlugForOwner } from "@/app/actions/manager/venue-actions";
+import { Badge } from "@/components/ui/badge";
+
+export const metadata = {
+  title: "Venue Details",
+  description: "Manage your sports venue and its courts.",
+};
 
 export default async function VenuePage({
   params,
@@ -44,8 +50,15 @@ export default async function VenuePage({
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          {venue.city} • {venue.approved ? "Approved" : "Pending"}
+
+        <CardContent className="text-sm text-muted-foreground font-medium">
+          {venue.city.toUpperCase()} •{" "}
+          <Badge
+            className="font-medium text-md"
+            variant={venue.approved ? "default" : "destructive"}
+          >
+            {venue.approved ? "Venue Approved" : "Venue approval Pending"}
+          </Badge>
         </CardContent>
       </Card>
 

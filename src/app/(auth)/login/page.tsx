@@ -2,12 +2,17 @@ import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/login-form";
 
+export const metadata = {
+  title: "Login",
+  description: "Access your QuickCourt account.",
+};
+
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       <div className="hidden lg:flex w-1/2 relative">
         <Image
-          src="/login_img.jpg"
+          src="/login.jpg"
           alt="Signup background"
           fill
           className="object-cover"
