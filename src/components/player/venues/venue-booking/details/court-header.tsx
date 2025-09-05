@@ -26,14 +26,17 @@ export function CourtHeader({ court }: Props) {
   return (
     <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
       <CardContent className="px-6 py-2 space-y-1">
-        <h1 className="text-2xl md:text-3xl font-bold">{court.name}</h1>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-semibold">{court.name}</h1>
+          <h3 className="text-lg font-semibold text-gray-700">
+            {court.venue.name}
+          </h3>
+        </div>
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground font-medium">
           <span className="flex items-center gap-1">
             <MapPin className="h-4 w-4" />
             {location || court.venue.country}
           </span>
-          <span>•</span>
-          <span>{court.venue.name}</span>
           <span>•</span>
           <span>{court.sport}</span>
           <span>•</span>

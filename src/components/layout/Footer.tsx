@@ -3,7 +3,7 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-white">
+    <footer className="border-t bg-gray-100">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-3">
           {/* Brand */}

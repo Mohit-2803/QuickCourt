@@ -54,10 +54,10 @@ model Venue {
   country     String?       @default("India")
   latitude    Float?
   longitude   Float?
-  amenities   String[]      @default([]) // e.g., ["parking", "lights"]
-  photos      String[]      @default([]) // Cloudinary URLs or public_ids
+  amenities   String[]      @default([])
+  photos      String[]      @default([])
   approved    Boolean       @default(false)
-  rating      Float? // optional aggregate
+  rating      Float?
   courts      Court[]
   reviews     Review[]
   createdAt   DateTime      @default(now())
@@ -68,21 +68,26 @@ model Venue {
 }
 
 model Court {
-  id           Int       @id @default(autoincrement())
-  venue        Venue     @relation(fields: [venueId], references: [id])
+  id           Int                   @id @default(autoincrement())
+  venue        Venue                 @relation(fields: [venueId], references: [id])
   venueId      Int
   name         String
-  sport        String // e.g., "Badminton", "Tennis", "Football"
+  sport        String
   image        String
-  pricePerHour Int // store in smallest currency unit (e.g., INR paisa OR cents)
-  currency     String    @default("INR")
-  openTime     Int // hour in 24h, e.g., 6
-  closeTime    Int // hour in 24h, e.g., 22
+  pricePerHour Int
+  currency     String                @default("INR")
+  openTime     Int
+  closeTime    Int
+  status       CourtStatus           @default(ACTIVE)
   bookings     Booking[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  ratingAgg    CourtRatingAggregate?
+  reviews      Review[]
+  CourtEvent   CourtEvent[]
 
   @@index([sport])
+  @@index([venueId])
 }
 
 model Booking {
@@ -100,7 +105,6 @@ model Booking {
   notes          String?
   createdAt      DateTime      @default(now())
 
-  // Prevent two exact same startTime bookings for same court
   @@unique([courtId, startTime])
   @@index([userId])
   @@index([courtId])
@@ -113,11 +117,11 @@ model Payment {
   bookingId             Int?          @unique
   gateway               String        @default("stripe")
   stripePaymentIntentId String?       @unique
-  stripeChargeId        String? // optional
-  amount                Int // smallest currency unit
+  stripeChargeId        String?
+  amount                Int
   currency              String        @default("INR")
   status                PaymentStatus @default(PENDING)
-  receiptUrl            String? // Stripe receipt URL
+  receiptUrl            String?
   paymentMethod         String?
   createdAt             DateTime      @default(now())
 
@@ -126,23 +130,30 @@ model Payment {
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  venue     Venue    @relation(fields: [venueId], references: [id])
-  venueId   Int
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  court   Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  courtId Int
+
+  // Optional: denormalized reference for venue-level reporting
+  venue   Venue? @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  venueId Int?
+
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
 
-  @@index([venueId])
+  @@index([courtId])
   @@index([userId])
+  @@index([venueId])
 }
 
 model EmailOtp {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  tokenHash String // store hashed OTP (bcrypt or sha256 with salt)
+  tokenHash String
   expiresAt DateTime
   attempts  Int      @default(0)
   verified  Boolean  @default(false)
@@ -166,7 +177,7 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
-// Optional NextAuth-compatible Session / Account models (helpful if you decide to use NextAuth adapter)
+// Optional NextAuth-compatible Session / Account models
 model Session {
   id           Int      @id @default(autoincrement())
   sessionToken String   @unique
@@ -203,6 +214,45 @@ model VerificationToken {
   @@index([identifier])
 }
 
+// For featured courts caching
+
+model CourtEvent {
+  id             Int       @id @default(autoincrement())
+  court          Court     @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  courtId        Int
+  kind           EventKind // VIEW or BOOKING
+  source         String?
+  city           String?
+  idempotencyKey String?
+  createdAt      DateTime  @default(now())
+
+  @@index([courtId, kind, createdAt])
+  @@index([city, kind, createdAt])
+}
+
+model CourtRatingAggregate {
+  court     Court    @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  courtId   Int      @id
+  stars1    Int      @default(0)
+  stars2    Int      @default(0)
+  stars3    Int      @default(0)
+  stars4    Int      @default(0)
+  stars5    Int      @default(0)
+  avg       Float    @default(0)
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model FeaturedSnapshot {
+  id         Int       @id @default(autoincrement())
+  city       String?
+  items      Json
+  computedAt DateTime  @default(now())
+  validUntil DateTime?
+
+  @@index([city, computedAt])
+}
+
 // Enums
 enum Role {
   USER
@@ -222,4 +272,14 @@ enum PaymentStatus {
   SUCCEEDED
   FAILED
   REFUNDED
+}
+
+enum CourtStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EventKind {
+  VIEW
+  BOOKING
 }

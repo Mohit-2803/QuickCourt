@@ -4,8 +4,17 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { VenueSchema, VenueFormValues } from "@/lib/validation";
-import { courtSchema, CourtFormValues } from "@/lib/validation";
+import {
+  VenueSchema,
+  VenueFormValues,
+  UpdateVenueSchema,
+  UpdateVenueFormValues,
+} from "@/lib/validation";
+import {
+  courtSchema,
+  CourtFormValues,
+  UpdateCourtSchema,
+} from "@/lib/validation";
 
 function toSlug(s: string) {
   return s
@@ -197,6 +206,7 @@ export async function getVenueBySlugForOwner(slug: string) {
           sport: true,
           pricePerHour: true,
           currency: true,
+          status: true,
           openTime: true,
           closeTime: true,
           image: true,
@@ -272,5 +282,133 @@ export async function createCourtForVenue(
       ok: false,
       error: (e as { message?: string })?.message || "Failed to create court",
     };
+  }
+}
+
+type ActionResult = { ok: boolean; error?: string };
+
+export async function updateVenueBySlug(
+  currentSlug: string,
+  values: UpdateVenueFormValues
+): Promise<ActionResult> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const user = session.user as AuthUser;
+  const role = user.role || session.role;
+  if (role !== "OWNER" && role !== "ADMIN") {
+    return { ok: false, error: "Insufficient permissions" };
+  }
+
+  const parsed = UpdateVenueSchema.safeParse(values);
+  if (!parsed.success) {
+    const msg = parsed.error.issues?.[0]?.message ?? "Invalid input";
+    return { ok: false, error: msg };
+  }
+  const data = parsed.data;
+
+  const existing = await prisma.venue.findFirst({
+    where: { slug: data.slug, NOT: { slug: currentSlug } },
+    select: { id: true },
+  });
+  if (existing) {
+    return { ok: false, error: "Slug is already taken" };
+  }
+
+  try {
+    const updated = await prisma.venue.update({
+      where: { slug: currentSlug },
+      data: {
+        name: data.name,
+        slug: data.slug,
+        description: data.description ?? null,
+        address: data.address,
+        city: data.city,
+        state: data.state ?? null,
+        country: data.country ?? null,
+        updatedAt: new Date(),
+      },
+      select: { slug: true },
+    });
+
+    revalidatePath("/manager/venues");
+    revalidatePath(`/manager/venues/${updated.slug}`);
+    if (currentSlug !== updated.slug) {
+      revalidatePath(`/manager/venues/${currentSlug}`);
+    }
+    return { ok: true };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Failed to update venue";
+    return { ok: false, error: msg };
+  }
+}
+
+export async function toggleCourtStatus(courtId: number) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return { ok: false, error: "Unauthorized" };
+  }
+  const user = session.user as AuthUser;
+  const role = user.role || session.role;
+  if (role !== "OWNER" && role !== "ADMIN") {
+    return { ok: false, error: "Insufficient permissions" };
+  }
+  const court = await prisma.court.findUnique({
+    where: { id: courtId },
+    select: {
+      status: true,
+      venue: { select: { owner: { select: { userId: true } } } },
+    },
+  });
+
+  if (!court) {
+    return { ok: false, error: "Court not found" };
+  }
+
+  try {
+    await prisma.court.update({
+      where: { id: courtId },
+      data: { status: court.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" },
+    });
+    revalidatePath("/manager/venues");
+    return { ok: true };
+  } catch (e: unknown) {
+    const msg =
+      e instanceof Error ? e.message : "Failed to update court status";
+    return { ok: false, error: msg };
+  }
+}
+
+export async function updateCourtById(
+  courtId: number,
+  values: Partial<CourtFormValues>
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return { ok: false, error: "Unauthorized" };
+  }
+  const user = session.user as AuthUser;
+  const role = user.role || session.role;
+  if (role !== "OWNER" && role !== "ADMIN") {
+    return { ok: false, error: "Insufficient permissions" };
+  }
+  const parsed = UpdateCourtSchema.safeParse(values);
+  if (!parsed.success) {
+    const msg = parsed.error.issues?.[0]?.message ?? "Invalid input";
+    return { ok: false, error: msg };
+  }
+  const data = parsed.data;
+  try {
+    const updated = await prisma.court.update({
+      where: { id: courtId },
+      data: { ...data, updatedAt: new Date() },
+      select: { id: true },
+    });
+    return { ok: true, court: updated };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Failed to update court";
+    return { ok: false, error: msg };
   }
 }

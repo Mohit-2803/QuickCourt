@@ -11,6 +11,7 @@ type Court = {
   image: string;
   pricePerHour: number;
   currency: string;
+  status: "ACTIVE" | "INACTIVE";
   openTime: number;
   closeTime: number;
 };

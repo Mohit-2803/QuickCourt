@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Pencil } from "lucide-react";
+import { MakeChangesDialog } from "./edit-venue/make-changes-dialog";
 
 type VenueCard = {
   id: number;
@@ -36,7 +37,7 @@ export default function VenuesGrid({ venues }: { venues: VenueCard[] }) {
         {venues.map((v) => (
           <Card
             key={v.id}
-            className="overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm"
+            className="overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm py-0 pb-6"
           >
             <div className="relative h-40 w-full bg-muted">
               {v.photos && v.photos.length > 0 && (
@@ -58,14 +59,14 @@ export default function VenuesGrid({ venues }: { venues: VenueCard[] }) {
                   variant="outline"
                   className={
                     v.approved
-                      ? "border-green-700/30 text-green-500 bg-green-600/15"
-                      : "border-amber-700/30 text-amber-500 bg-amber-600/15"
+                      ? "border-green-700/30 text-green-500 bg-green-600/15 font-medium"
+                      : "border-amber-700/30 text-amber-500 bg-amber-600/15 font-medium"
                   }
                 >
-                  {v.approved ? "Approved" : "Pending"}
+                  {v.approved ? "Approved" : "Approval Pending"}
                 </Badge>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground font-medium">
                 <MapPin className="h-4 w-4" />
                 <span className="truncate">
                   {v.city}
@@ -78,12 +79,16 @@ export default function VenuesGrid({ venues }: { venues: VenueCard[] }) {
               <p className="line-clamp-2 text-sm text-muted-foreground">
                 {v.description}
               </p>
-              <div className="mt-3 text-sm text-muted-foreground">
+              <div className="mt-3 text-sm font-semibold text-green-700">
                 {v.courtsCount} courts
               </div>
             </CardContent>
-            <CardFooter className="flex items-center justify-between">
-              <Button variant="outline" className="gap-2" asChild>
+            <CardFooter className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                className="gap-2 cursor-pointer"
+                asChild
+              >
                 <a
                   href={`/manager/venues/${v.slug}`}
                   aria-label={`View ${v.name}`}
@@ -91,10 +96,16 @@ export default function VenuesGrid({ venues }: { venues: VenueCard[] }) {
                   View
                 </a>
               </Button>
-              <Button className="gap-2" variant="ghost">
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
+
+              <MakeChangesDialog venue={v}>
+                <Button
+                  className="gap-2 cursor-pointer hover:text-green-700"
+                  variant="ghost"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Make Changes
+                </Button>
+              </MakeChangesDialog>
             </CardFooter>
           </Card>
         ))}

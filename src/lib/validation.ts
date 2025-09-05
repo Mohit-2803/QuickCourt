@@ -85,10 +85,10 @@ export const courtSchema = z
   .object({
     name: z.string().min(2, "Name is required"),
     sport: z.string().min(2, "Sport is required"),
-    pricePerHour: z.coerce.number().int().min(0, "Price must be >= 0"),
+    pricePerHour: z.number().int().min(0, "Price must be >= 0"),
     currency: z.string().min(1, "Currency is required").default("INR"),
-    openTime: z.coerce.number().int().min(0).max(23),
-    closeTime: z.coerce.number().int().min(0).max(23),
+    openTime: z.number().int().min(0).max(23),
+    closeTime: z.number().int().min(0).max(23),
     image: z.string().url("Invalid image URL").optional(),
   })
   .refine((v) => v.openTime < v.closeTime, {
@@ -96,9 +96,48 @@ export const courtSchema = z
     path: ["closeTime"],
   });
 
+export const UpdateVenueSchema = VenueSchema.pick({
+  name: true,
+  slug: true,
+  address: true,
+  city: true,
+  state: true,
+  country: true,
+  description: true,
+});
+
+export const UpdateCourtSchema = z.object({
+  name: z.string().min(1),
+  sport: z.string(),
+  pricePerHour: z.number(),
+  openTime: z.number(),
+  closeTime: z.number(),
+  image: z.string().optional(),
+  currency: z.string().optional(),
+});
+
+export const recordEventSchema = z.object({
+  courtId: z.number().int().positive(),
+  kind: z.enum(["VIEW", "BOOKING"]),
+  source: z.string().max(40).optional(), // "featured" | "search" | "details"
+  idempotencyKey: z.string().max(100).optional(), // optional dedupe per session/click
+});
+
+export const searchSchema = z.object({
+  city: z.string().min(2),
+  sport: z.string().optional(),
+  q: z.string().optional(),
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(50).default(12),
+});
+
 export type SignupSchema = z.infer<typeof signupSchema>;
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type VerifyOtpSchema = z.infer<typeof verifyOtpSchema>;
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export type VenueFormValues = z.infer<typeof VenueSchema>;
 export type CourtFormValues = z.infer<typeof courtSchema>;
+export type UpdateVenueFormValues = z.infer<typeof UpdateVenueSchema>;
+export type UpdateCourtFormValues = z.infer<typeof UpdateCourtSchema>;
+export type RecordEventSchemaValues = z.infer<typeof recordEventSchema>;
+export type SearchCourtSchemaValues = z.infer<typeof searchSchema>;

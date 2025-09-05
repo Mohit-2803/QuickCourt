@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
+import { toggleCourtStatus } from "@/app/actions/manager/venue-actions";
+import { toast } from "sonner";
+import { EditCourtDialog } from "./edit-court/edit-court-dialog";
 
 type Court = {
   id: number;
@@ -20,9 +23,20 @@ type Court = {
   currency: string;
   openTime: number;
   closeTime: number;
+  status: "ACTIVE" | "INACTIVE";
   ratingAvg?: number | null;
   ratingCount?: number;
 };
+
+async function handleToggleStatus(courtId: number) {
+  try {
+    const res = await toggleCourtStatus(courtId);
+    if (res.ok) toast.success("Court status updated");
+    else toast.error(res.error || "Failed to update court status");
+  } catch (error) {
+    console.error("Error toggling court status:", error);
+  }
+}
 
 export default function CourtCard({ court }: { court: Court }) {
   const rating = court.ratingAvg ?? 0;
@@ -42,7 +56,6 @@ export default function CourtCard({ court }: { court: Court }) {
         )}
       </div>
 
-      {/* Header */}
       <CardHeader className="pb-2 space-y-1">
         <CardTitle className="text-base font-semibold">{court.name}</CardTitle>
 
@@ -73,7 +86,6 @@ export default function CourtCard({ court }: { court: Court }) {
         </div>
       </CardHeader>
 
-      {/* Content */}
       <CardContent className="pt-0">
         <div className="text-sm text-muted-foreground font-medium">
           Hours: {court.openTime}:00 - {court.closeTime}:00
@@ -81,18 +93,31 @@ export default function CourtCard({ court }: { court: Court }) {
         <div className="mt-1 text-md font-medium">
           Price: ₹{court.pricePerHour} / hour
         </div>
+        <div className="mt-1 text-md font-medium">
+          Status:{" "}
+          {court.status === "ACTIVE" ? (
+            <span className="text-green-500">Active</span>
+          ) : (
+            <span className="text-red-500">Inactive</span>
+          )}
+        </div>
       </CardContent>
 
-      {/* Actions */}
       <CardFooter className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="cursor-pointer">
-          Edit
-        </Button>
-        <Button variant="outline" size="sm" className="cursor-pointer">
-          Price
-        </Button>
-        <Button variant="destructive" size="sm" className="cursor-pointer">
-          Disable
+        {/* Open modal to edit all fields including price */}
+        <EditCourtDialog court={court}>
+          <Button variant="outline" size="sm" className="cursor-pointer">
+            Edit
+          </Button>
+        </EditCourtDialog>
+
+        <Button
+          variant="destructive"
+          size="sm"
+          className="cursor-pointer"
+          onClick={() => handleToggleStatus(court.id)}
+        >
+          {court.status === "ACTIVE" ? "Deactivate" : "Activate"}
         </Button>
       </CardFooter>
     </Card>

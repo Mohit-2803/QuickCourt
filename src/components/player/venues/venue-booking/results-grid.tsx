@@ -6,6 +6,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star } from "lucide-react";
 import Link from "next/link";
+import { recordCourtEvent } from "@/app/actions/player/featured-action";
+import { getOrCreateSessionId } from "@/utils/session-id";
 
 type CourtCard = {
   id: number;
@@ -22,9 +24,6 @@ type CourtCard = {
 export function ResultsGrid({ items }: { items: CourtCard[] }) {
   return (
     <section className="space-y-3">
-      <div className="text-sm text-muted-foreground">
-        We got {items.length} results for you
-      </div>
       {items.length === 0 ? (
         <div className="text-center text-muted-foreground text-lg font-medium py-8">
           No results found.
@@ -80,7 +79,7 @@ export function ResultsGrid({ items }: { items: CourtCard[] }) {
                     );
                   })}
                   <span className="ml-1 text-xs text-muted-foreground">
-                    {it.ratingAvg?.toFixed(1) ?? "—"}
+                    {it.ratingAvg?.toFixed(1) ?? "0.0"}
                     {it.ratingCount ? ` (${it.ratingCount})` : ""}
                   </span>
                 </div>
@@ -98,7 +97,22 @@ export function ResultsGrid({ items }: { items: CourtCard[] }) {
               </CardContent>
 
               <CardFooter>
-                <Button className="w-full cursor-pointer">
+                <Button
+                  className="w-full cursor-pointer"
+                  // When clicked here we record the event by making an idempotency key so that same user clicking multiple times in a minute doesn't create multiple events
+                  onClick={() => {
+                    const sessionId = getOrCreateSessionId();
+                    const minuteBucket = Math.floor(Date.now() / 60000);
+                    const idem = `${sessionId}:${it.id}:${minuteBucket}`;
+                    recordCourtEvent({
+                      courtId: it.id,
+                      kind: "VIEW",
+                      source: "search",
+                      idempotencyKey: idem,
+                    }).catch(() => {});
+                  }}
+                  asChild
+                >
                   <Link href={`/venues/venue-booking/courts/${it.id}`}>
                     View
                   </Link>

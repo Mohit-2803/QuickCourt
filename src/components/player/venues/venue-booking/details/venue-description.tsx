@@ -11,7 +11,7 @@ export function VenueDescription({
     <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
       <CardContent className="p-5 space-y-2">
         <h2 className="text-lg font-semibold">About {venue.name}</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground font-medium">
           {venue.description || "No description available."}
         </p>
       </CardContent>

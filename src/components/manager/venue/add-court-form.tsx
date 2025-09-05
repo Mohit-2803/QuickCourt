@@ -39,7 +39,7 @@ async function uploadOne(file: File): Promise<string> {
 
 export default function AddCourtForm({ slug }: { slug: string }) {
   const router = useRouter();
-  const form = useForm({
+  const form = useForm<CourtFormValues>({
     resolver: zodResolver(courtSchema),
     defaultValues: {
       name: "",
@@ -56,12 +56,15 @@ export default function AddCourtForm({ slug }: { slug: string }) {
   const [uploading, setUploading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
 
+  // New: block submit when a file is selected but not uploaded to an URL yet
+  const imagePendingUpload = !!localFile && !form.getValues("image");
+
   const handleUpload = async () => {
     if (!localFile) return;
     setUploading(true);
     try {
       const url = await uploadOne(localFile);
-      form.setValue("image", url, { shouldDirty: true });
+      form.setValue("image", url, { shouldDirty: true, shouldValidate: true });
       toast.success("Image uploaded");
     } catch (e: unknown) {
       const errorMessage =
@@ -75,6 +78,12 @@ export default function AddCourtForm({ slug }: { slug: string }) {
   };
 
   const onSubmit = async (values: CourtFormValues) => {
+    // Guard: require uploaded image URL if a file was chosen
+    if (imagePendingUpload) {
+      toast.error("Please upload the selected image before submitting.");
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await createCourtForVenue(slug, values);
@@ -97,6 +106,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
       >
         <h1 className="text-xl font-semibold">Add Court</h1>
 
+        {/* name */}
         <FormField
           control={form.control}
           name="name"
@@ -111,7 +121,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
           )}
         />
 
-        {/* Sport selection or free text */}
+        {/* sport */}
         <FormField
           control={form.control}
           name="sport"
@@ -125,21 +135,18 @@ export default function AddCourtForm({ slug }: { slug: string }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem className="cursor-pointer" value="Badminton">
-                    Badminton
-                  </SelectItem>
-                  <SelectItem className="cursor-pointer" value="Tennis">
-                    Tennis
-                  </SelectItem>
-                  <SelectItem className="cursor-pointer" value="Football">
-                    Football
-                  </SelectItem>
-                  <SelectItem className="cursor-pointer" value="Squash">
-                    Squash
-                  </SelectItem>
-                  <SelectItem className="cursor-pointer" value="Table Tennis">
-                    Table Tennis
-                  </SelectItem>
+                  <SelectItem value="Badminton">Badminton</SelectItem>
+                  <SelectItem value="Tennis">Tennis</SelectItem>
+                  <SelectItem value="Football">Football</SelectItem>
+                  <SelectItem value="Squash">Squash</SelectItem>
+                  <SelectItem value="Table Tennis">Table Tennis</SelectItem>
+                  <SelectItem value="Cricket">Cricket</SelectItem>
+                  <SelectItem value="Box Cricket">Box Cricket</SelectItem>
+                  <SelectItem value="Hockey">Hockey</SelectItem>
+                  <SelectItem value="Baseball">Baseball</SelectItem>
+                  <SelectItem value="Volleyball">Volleyball</SelectItem>
+                  <SelectItem value="Basketball">Basketball</SelectItem>
+                  <SelectItem value="Golf">Golf</SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>Choose a sport type.</FormDescription>
@@ -148,7 +155,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
           )}
         />
 
-        {/* Pricing and currency */}
+        {/* price + currency */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -193,7 +200,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
           />
         </div>
 
-        {/* Hours */}
+        {/* hours */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -243,6 +250,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
           />
         </div>
 
+        {/* image */}
         <FormField
           control={form.control}
           name="image"
@@ -274,6 +282,12 @@ export default function AddCourtForm({ slug }: { slug: string }) {
                   {uploading ? "Uploading..." : "Upload image"}
                 </Button>
               </div>
+              {imagePendingUpload && (
+                <p className="text-xs text-amber-600">
+                  A file is selected. Please click “Upload image” before
+                  submitting.
+                </p>
+              )}
               <FormDescription>
                 Paste a URL or upload via Cloudinary.
               </FormDescription>
@@ -294,7 +308,12 @@ export default function AddCourtForm({ slug }: { slug: string }) {
           <Button
             type="submit"
             className="cursor-pointer"
-            disabled={saving || uploading}
+            disabled={saving || uploading || imagePendingUpload}
+            title={
+              imagePendingUpload
+                ? "Upload selected image before submitting"
+                : undefined
+            }
           >
             {saving ? "Saving..." : "Create Court"}
           </Button>
