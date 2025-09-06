@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "prestart": "prisma migrate deploy",
+    "postinstall": "prisma generate",
+    "lint": "next lint"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.2.6",
@@ -61,5 +63,9 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.7",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.18.0",
+    "npm": ">=9"
   }
 }

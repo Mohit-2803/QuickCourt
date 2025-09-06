@@ -72,7 +72,7 @@ export function Navbar() {
     }
     if (user) {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 focus:outline-none cursor-pointer">
               <Avatar className="h-9 w-9">
@@ -86,7 +86,7 @@ export function Navbar() {
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
+          <DropdownMenuContent className="w-56 z-[12000]" align="end">
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span className="font-medium">{user.name}</span>
@@ -147,91 +147,98 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold shadow">
-            QC
-          </span>
-          <span className="text-xl font-semibold text-foreground">
-            QuickCourt
-          </span>
-        </Link>
+    <>
+      <header className="sticky top-0 z-[11000] w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold shadow">
+              QC
+            </span>
+            <span className="text-xl font-semibold text-foreground">
+              QuickCourt
+            </span>
+          </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {links.map((item) => (
-            <NavLink
-              key={item.href}
-              {...item}
-              active={
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href))
-              }
-            />
-          ))}
-        </nav>
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {links.map((item) => (
+              <NavLink
+                key={item.href}
+                {...item}
+                active={
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(item.href))
+                }
+              />
+            ))}
+          </nav>
 
-        {/* Desktop Auth */}
-        <div className="hidden md:flex items-center gap-3">
-          <AuthButtons />
+          {/* Desktop Auth */}
+          <div className="hidden md:flex items-center gap-3">
+            <AuthButtons />
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            aria-label="Toggle menu"
+            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-md border text-foreground hover:bg-accent"
+            onClick={() => setOpen((s) => !s)}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor">
+              {open ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          aria-label="Toggle menu"
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-md border text-foreground hover:bg-accent"
-          onClick={() => setOpen((s) => !s)}
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor">
-            {open ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
-        </button>
-      </div>
-
-      {/* Mobile Nav */}
-      <AnimatePresence>
-        {open && (
-          <motion.nav
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden border-top bg-background"
-          >
-            <div className="px-4 py-3 space-y-2">
-              {links.map((item) => (
-                <NavLink
-                  key={item.href}
-                  {...item}
-                  active={
-                    pathname === item.href ||
-                    (item.href !== "/" && pathname.startsWith(item.href))
-                  }
-                />
-              ))}
-              <div className="pt-2 border-t mt-2">
-                <AuthButtons mobile />
+        {/* Mobile Nav */}
+        <AnimatePresence>
+          {open && (
+            <motion.nav
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden border-top bg-background"
+            >
+              <div className="px-4 py-3 space-y-2">
+                {links.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    {...item}
+                    active={
+                      pathname === item.href ||
+                      (item.href !== "/" && pathname.startsWith(item.href))
+                    }
+                  />
+                ))}
+                <div className="pt-2 border-t mt-2">
+                  <AuthButtons mobile />
+                </div>
               </div>
-            </div>
-          </motion.nav>
-        )}
-      </AnimatePresence>
-    </header>
+            </motion.nav>
+          )}
+        </AnimatePresence>
+      </header>
+      <style jsx global>{`
+        body {
+          overflow: auto !important;
+        }
+      `}</style>
+    </>
   );
 }

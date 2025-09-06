@@ -14,9 +14,11 @@ export const metadata = {
 export default async function VenuePage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const res = await getVenueBySlugForOwner(params.slug);
+  const { slug } = await params;
+
+  const res = await getVenueBySlugForOwner(slug);
 
   if (!res.ok || !res.venue) {
     return (

@@ -1,13 +1,39 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import type { Metadata } from "next";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/login-form";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Login",
   description: "Access your QuickCourt account.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+}) {
+  const [session, sp] = await Promise.all([
+    getServerSession(authOptions),
+    searchParams,
+  ]);
+
+  if (session) {
+    const callbackUrlParam = Array.isArray(sp?.callbackUrl)
+      ? sp.callbackUrl[0]
+      : sp?.callbackUrl;
+
+    const callbackUrl =
+      callbackUrlParam ??
+      (session.user.role === "OWNER" ? "/manager/dashboard" : "/player");
+
+    redirect(callbackUrl);
+  }
+
   return (
     <div className="flex min-h-screen">
       <div className="hidden lg:flex w-1/2 relative">

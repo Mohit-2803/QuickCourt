@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getSession, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import {
@@ -22,6 +22,7 @@ import Link from "next/link";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -43,9 +44,17 @@ export function LoginForm() {
       toast.error(res.error);
     } else {
       toast.success("Login successful!");
+
       const session = await getSession();
       const isManager = session?.user?.role === "OWNER";
-      router.push(isManager ? "/manager/dashboard" : "/player");
+
+      const callbackUrl = searchParams.get("callbackUrl");
+
+      if (callbackUrl) {
+        router.replace(callbackUrl);
+      } else {
+        router.replace(isManager ? "/manager/dashboard" : "/player");
+      }
     }
   }
 

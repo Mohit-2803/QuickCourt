@@ -34,6 +34,8 @@ export type CourtDetailsResult =
         sport: string;
         pricePerHour: number;
         image: string;
+        ratingAvg: number | null;
+        ratingCount: number | null;
       }>;
       reviews: Array<{
         id: number;

@@ -8,7 +8,7 @@ import { getOrCreateSessionId } from "@/utils/session-id";
 import { recordCourtEvent } from "@/app/actions/player/featured-action";
 import Link from "next/link";
 
-type Court = {
+export type CourtSummary = {
   id: number;
   name: string;
   sport: string;
@@ -23,7 +23,7 @@ export function MoreFromVenue({
   items,
 }: {
   venueName: string;
-  items: Court[];
+  items: CourtSummary[];
 }) {
   return (
     <section className="space-y-3">
@@ -90,7 +90,6 @@ export function MoreFromVenue({
             <CardFooter>
               <Button
                 className="w-full cursor-pointer"
-                // When clicked here we record the event by making an idempotency key so that same user clicking multiple times in a minute doesn't create multiple events
                 onClick={() => {
                   const sessionId = getOrCreateSessionId();
                   const minuteBucket = Math.floor(Date.now() / 60000);

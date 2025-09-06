@@ -4,9 +4,11 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LeafletMap } from "./maps/LeafletMap";
+import Link from "next/link";
 
 type Props = {
   court: {
+    courtId: number;
     image: string;
     openTime: number;
     closeTime: number;
@@ -56,11 +58,17 @@ export function CourtMain({ court }: Props) {
             </div>
           </CardContent>
           <CardFooter className="pt-0">
-            <Button className="w-full cursor-pointer">Book Now</Button>
+            <Button className="w-full cursor-pointer">
+              <Link
+                href={`/venues/venue-booking/courts/${court.courtId}/booking`}
+              >
+                Book Now
+              </Link>
+            </Button>
           </CardFooter>
         </Card>
 
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm py-0">
+        <Card className="rounded-2xl z-0 border bg-card text-card-foreground shadow-sm py-0">
           <CardContent className="p-5">
             <h2 className="text-lg font-semibold mb-2">Location map</h2>
             {hasCoords ? (

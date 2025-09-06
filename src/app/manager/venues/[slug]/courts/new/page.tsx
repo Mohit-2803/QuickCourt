@@ -5,10 +5,16 @@ export const metadata = {
   description: "Add a new court to your sports venue.",
 };
 
-export default function NewCourtPage({ params }: { params: { slug: string } }) {
+export default async function NewCourtPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
   return (
     <div className="mx-auto w-full max-w-2xl p-6 md:p-8">
-      <AddCourtForm slug={params.slug} />
+      <AddCourtForm slug={slug} />
     </div>
   );
 }

@@ -7,7 +7,10 @@ import { AmenitiesRow } from "@/components/player/venues/venue-booking/details/a
 import { VenueDescription } from "@/components/player/venues/venue-booking/details/venue-description";
 import { ReviewsSection } from "@/components/player/venues/venue-booking/details/reviews-section";
 import { getCourtDetails } from "@/app/actions/player/get-court-details";
-import { MoreFromVenue } from "@/components/player/venues/venue-booking/details/more-from-venue";
+import {
+  MoreFromVenue,
+  type CourtSummary,
+} from "@/components/player/venues/venue-booking/details/more-from-venue";
 
 export const metadata = {
   title: "Court Details",
@@ -17,9 +20,11 @@ export const metadata = {
 export default async function CourtDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const id = Number(params.id);
+  const { id: idStr } = await params;
+  const id = Number(idStr);
+
   if (!Number.isFinite(id) || id <= 0) notFound();
 
   const res = await getCourtDetails(id);
@@ -48,6 +53,7 @@ export default async function CourtDetailsPage({
       >
         <CourtMain
           court={{
+            courtId: court.id,
             sport: court.sport,
             pricePerHour: court.pricePerHour,
             currency: court.currency,
@@ -81,15 +87,17 @@ export default async function CourtDetailsPage({
       >
         <MoreFromVenue
           venueName={court.venue.name}
-          items={moreCourts.map((c) => ({
-            id: c.id,
-            name: c.name,
-            sport: c.sport,
-            pricePerHour: c.pricePerHour,
-            image: c.image,
-            ratingAvg: c.ratingAvg,
-            ratingCount: c.ratingCount,
-          }))}
+          items={moreCourts.map(
+            (c): CourtSummary => ({
+              id: c.id,
+              name: c.name,
+              sport: c.sport,
+              pricePerHour: c.pricePerHour,
+              image: c.image,
+              ratingAvg: c.ratingAvg,
+              ratingCount: c.ratingCount,
+            })
+          )}
         />
       </Suspense>
 

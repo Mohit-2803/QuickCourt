@@ -86,7 +86,7 @@ export const courtSchema = z
     name: z.string().min(2, "Name is required"),
     sport: z.string().min(2, "Sport is required"),
     pricePerHour: z.number().int().min(0, "Price must be >= 0"),
-    currency: z.string().min(1, "Currency is required").default("INR"),
+    currency: z.string().min(1, "Currency is required"),
     openTime: z.number().int().min(0).max(23),
     closeTime: z.number().int().min(0).max(23),
     image: z.string().url("Invalid image URL").optional(),

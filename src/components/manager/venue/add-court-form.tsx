@@ -284,7 +284,7 @@ export default function AddCourtForm({ slug }: { slug: string }) {
               </div>
               {imagePendingUpload && (
                 <p className="text-xs text-amber-600">
-                  A file is selected. Please click “Upload image” before
+                  A file is selected. Please click Upload image before
                   submitting.
                 </p>
               )}
