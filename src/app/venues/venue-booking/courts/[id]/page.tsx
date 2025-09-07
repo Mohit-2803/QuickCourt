@@ -11,6 +11,7 @@ import {
   MoreFromVenue,
   type CourtSummary,
 } from "@/components/player/venues/venue-booking/details/more-from-venue";
+import { canLeaveReview } from "@/app/actions/player/review-actions";
 
 export const metadata = {
   title: "Court Details",
@@ -31,6 +32,8 @@ export default async function CourtDetailsPage({
   if (!res.ok) notFound();
 
   const { court, moreCourts, reviews } = res;
+
+  const eligibleToReview = await canLeaveReview(id);
 
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8 space-y-8">
@@ -107,6 +110,8 @@ export default async function CourtDetailsPage({
         <ReviewsSection
           average={court.ratingAvg ?? 0}
           total={court.ratingCount ?? 0}
+          canLeaveReview={eligibleToReview}
+          courtId={court.id}
           reviews={reviews.map((review) => ({
             ...review,
             id: String(review.id),

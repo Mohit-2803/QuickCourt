@@ -33,15 +33,23 @@ export function VenuesHero({ images }: { images: string[] }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Suggestion[]>([]);
+  const [navigating, setNavigating] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // Debounce
   useEffect(() => {
+    if (navigating) {
+      setOpen(false);
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
     if (!query || query.length < 2) {
       setResults([]);
       setOpen(false);
       return;
     }
+
     const t = setTimeout(async () => {
       try {
         setLoading(true);
@@ -57,7 +65,8 @@ export function VenuesHero({ images }: { images: string[] }) {
         if (!res.ok) throw new Error("Geoapify request failed");
         const data = await res.json();
 
-        // JSON format returns array in results
+        if (navigating) return;
+
         const items: Suggestion[] = data?.results ?? [];
         const mapped: Suggestion[] = items.map((it) => ({
           name: it.name,
@@ -71,24 +80,27 @@ export function VenuesHero({ images }: { images: string[] }) {
         setResults(mapped);
         setOpen(mapped.length > 0);
       } catch {
-        setResults([]);
-        setOpen(false);
+        if (!navigating) {
+          setResults([]);
+          setOpen(false);
+        }
       } finally {
-        setLoading(false);
+        if (!navigating) {
+          setLoading(false);
+        }
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, navigating]);
 
   function selectSuggestion(s: Suggestion) {
     setLoading(false);
     setResults([]);
-    const city = s.formatted?.split(",")[0] || s.city || s.name || "";
-    setQuery(s.city || city || "");
     setOpen(false);
-    router.push(
-      `/venues/venue-booking?city=${encodeURIComponent(s.city || city || "")}`
-    );
+    setNavigating(true);
+    const city = s.formatted?.split(",")[0] || s.city || s.name || "";
+    setQuery(city);
+    router.push(`/venues/venue-booking?city=${encodeURIComponent(city)}`);
   }
 
   return (
@@ -110,10 +122,16 @@ export function VenuesHero({ images }: { images: string[] }) {
               className="pl-9"
               aria-label="Search city"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setNavigating(false);
+              }}
               onFocus={() => results.length && setOpen(true)}
               onBlur={() => setTimeout(() => setOpen(false), 150)}
             />
+            {navigating && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 border-2 border-t-transparent border-muted-foreground rounded-full animate-spin"></div>
+            )}
             {open && (
               <ul
                 ref={listRef}

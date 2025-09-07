@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,68 +14,146 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 interface BookingFormProps {
   courtId: number;
+  openTime: number; // e.g. 9
+  closeTime: number; // e.g. 21
 }
 
 const bookingSchema = z.object({
-  startDateTime: z.string().nonempty("Start date/time is required"),
-  endDateTime: z.string().nonempty("End date/time is required"),
+  date: z.date(),
+  startHour: z.string(),
+  endHour: z.string(),
   notes: z.string().optional(),
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-export default function BookingForm({ courtId }: BookingFormProps) {
-  const [error, setError] = useState<string | null>(null);
+export default function BookingForm({
+  courtId,
+  openTime,
+  closeTime,
+}: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      startDateTime: "",
-      endDateTime: "",
+      date: new Date(),
+      startHour: openTime.toString(),
+      endHour: (openTime + 1).toString(),
       notes: "",
     },
   });
 
-  async function onSubmit(data: BookingFormValues) {
-    setError(null);
+  const startHour = form.watch("startHour");
+  const endHour = form.watch("endHour");
 
-    // Additional client-side validation for date ordering
-    if (new Date(data.endDateTime) <= new Date(data.startDateTime)) {
-      setError("End time must be after start time");
+  useEffect(() => {
+    if (startHour && endHour) {
+      if (Number(endHour) <= Number(startHour)) {
+        const nextHour = Math.min(Number(startHour) + 1, closeTime);
+        form.setValue("endHour", nextHour.toString());
+      }
+    }
+  }, [startHour, endHour, form, closeTime]);
+
+  const hourOptions: string[] = [];
+  for (let h = openTime; h < closeTime; h++) {
+    hourOptions.push(h.toString());
+  }
+
+  async function onSubmit(data: BookingFormValues) {
+    const { date, startHour, endHour, notes } = data;
+
+    const startDateTime = new Date(date);
+    startDateTime.setHours(Number(startHour), 0, 0, 0);
+
+    const endDateTime = new Date(date);
+    endDateTime.setHours(Number(endHour), 0, 0, 0);
+
+    if (endDateTime <= startDateTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
+    if (startDateTime < new Date()) {
+      toast.error("Start time must be in the future");
       return;
     }
 
     setLoading(true);
+    setSuccess(false);
+
     try {
+      const idempotencyKey = `${courtId}-${startDateTime.toISOString()}-${endDateTime.toISOString()}`;
+
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           courtId,
-          startTime: data.startDateTime,
-          endTime: data.endDateTime,
-          notes: data.notes,
+          startTime: startDateTime.toISOString(),
+          endTime: endDateTime.toISOString(),
+          notes,
+          idempotencyKey,
         }),
       });
 
-      if (res.ok) {
-        setSuccess(true);
-      } else {
-        const resData = await res.json();
-        setError(resData.error || "Failed to create booking");
+      // ALWAYS attempt to parse JSON, regardless of `res.ok`
+      // This way, even error responses with JSON bodies can be handled
+      let resData;
+      try {
+        resData = await res.json();
+      } catch (jsonError) {
+        // If parsing fails, it's likely an empty or malformed non-JSON response
+        // This is where your original SyntaxError was coming from
+        toast.error("Server responded with malformed data or no data.");
+        setLoading(false);
+        console.error("JSON parsing error:", jsonError);
+        return; // Stop execution here as we can't process the response
       }
-    } catch {
-      setError("Unexpected error");
+
+      if (res.ok) {
+        if (resData.url) {
+          window.location.href = resData.url; // Redirect to Stripe Checkout
+        } else {
+          toast.error("Payment URL not received from a successful booking."); // More specific message
+          setLoading(false);
+        }
+      } else {
+        // Now resData is guaranteed to exist and be an object if the `res.json()` didn't throw
+        if (res.status === 409) {
+          toast.error(resData.error || "This time slot is already booked.");
+        } else if (res.status === 404) {
+          toast.error(resData.error || "Court not found.");
+        } else {
+          toast.error(
+            resData.error || "Failed to create booking. Please try again."
+          );
+        }
+        setLoading(false);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(`Unexpected client-side error: ${error.message}`);
+        console.error("Client-side error during fetch:", error);
+      } else {
+        toast.error("An unknown client-side error occurred.");
+      }
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   if (success) {
@@ -85,39 +164,92 @@ export default function BookingForm({ courtId }: BookingFormProps) {
     );
   }
 
+  const today = new Date();
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {error && (
-          <div className="rounded-md bg-red-100 p-3 text-red-900 font-semibold">
-            {error}
-          </div>
-        )}
-
         <FormField
           control={form.control}
-          name="startDateTime"
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormLabel htmlFor="startDateTime">Start Date and Time</FormLabel>
+          name="date"
+          render={({ field }) => (
+            <FormItem className="border rounded-md p-4">
+              <FormLabel>Select Date</FormLabel>
               <FormControl>
-                <Input id="startDateTime" type="datetime-local" {...field} />
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={field.onChange}
+                  disabled={(date) =>
+                    date.getTime() <
+                    new Date(today.setHours(0, 0, 0, 0)).getTime()
+                  }
+                  initialFocus
+                />
               </FormControl>
-              <FormMessage>{fieldState.error?.message}</FormMessage>
+              <FormMessage />
             </FormItem>
           )}
         />
 
         <FormField
           control={form.control}
-          name="endDateTime"
-          render={({ field, fieldState }) => (
+          name="startHour"
+          render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="endDateTime">End Date and Time</FormLabel>
+              <FormLabel>Start Time</FormLabel>
               <FormControl>
-                <Input id="endDateTime" type="datetime-local" {...field} />
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="cursor-pointer">
+                    <SelectValue placeholder="Select start hour" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hourOptions.map((hour) => (
+                      <SelectItem
+                        key={hour}
+                        value={hour}
+                        className="cursor-pointer"
+                      >
+                        {`${Number(hour) % 12 || 12}:00 ${
+                          Number(hour) >= 12 ? "PM" : "AM"
+                        }`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
-              <FormMessage>{fieldState.error?.message}</FormMessage>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="endHour"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>End Time</FormLabel>
+              <FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="cursor-pointer">
+                    <SelectValue placeholder="Select end hour" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hourOptions.map((hour) => (
+                      <SelectItem
+                        key={hour}
+                        value={hour}
+                        className="cursor-pointer"
+                      >
+                        {`${Number(hour) % 12 || 12}:00 ${
+                          Number(hour) >= 12 ? "PM" : "AM"
+                        }`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -127,16 +259,20 @@ export default function BookingForm({ courtId }: BookingFormProps) {
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="notes">Additional Notes (optional)</FormLabel>
+              <FormLabel>Additional Notes (optional)</FormLabel>
               <FormControl>
-                <Textarea id="notes" rows={4} {...field} />
+                <Textarea rows={4} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button
+          type="submit"
+          className="w-full cursor-pointer"
+          disabled={loading}
+        >
           {loading ? "Booking..." : "Book Now"}
         </Button>
       </form>

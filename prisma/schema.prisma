@@ -103,6 +103,7 @@ model Booking {
   payment        Payment?
   paymentId      Int?          @unique
   idempotencyKey String?       @unique
+  stripeCheckoutUrl    String?
   notes          String?
   createdAt      DateTime      @default(now())
 
@@ -119,6 +120,8 @@ model Payment {
   gateway               String        @default("stripe")
   stripePaymentIntentId String?       @unique
   stripeChargeId        String?
+  stripeCheckoutSessionId String?     @unique 
+  idempotencyKey        String?       @unique 
   amount                Int
   currency              String        @default("INR")
   status                PaymentStatus @default(PENDING)
@@ -127,6 +130,8 @@ model Payment {
   createdAt             DateTime      @default(now())
 
   @@index([stripePaymentIntentId])
+  @@index([stripeCheckoutSessionId])
+  @@index([idempotencyKey]) 
   @@index([status])
 }
 

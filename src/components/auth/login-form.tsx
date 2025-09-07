@@ -53,7 +53,7 @@ export function LoginForm() {
       if (callbackUrl) {
         router.replace(callbackUrl);
       } else {
-        router.replace(isManager ? "/manager/dashboard" : "/player");
+        router.replace(isManager ? "/manager/dashboard" : "/venues");
       }
     }
   }

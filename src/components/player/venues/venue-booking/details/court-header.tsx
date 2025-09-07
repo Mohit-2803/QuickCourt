@@ -52,7 +52,7 @@ export function CourtHeader({ court }: Props) {
               />
             ))}
             <span className="ml-1">
-              {court.ratingAvg.toFixed(1)} ({court.ratingCount})
+              {court.ratingAvg.toFixed(1)} ({court.ratingCount} reviews)
             </span>
           </span>
         </div>

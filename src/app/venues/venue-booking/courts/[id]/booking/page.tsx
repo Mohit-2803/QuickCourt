@@ -8,6 +8,13 @@ interface BookingPageProps {
   params: Promise<{ id: string }>;
 }
 
+// Format 24hr integer hour to 12-hour string with am/pm
+function formatHour(hour: number) {
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${hour12}:00 ${suffix}`;
+}
+
 export default async function BookingPage({ params }: BookingPageProps) {
   const { id } = await params;
 
@@ -40,11 +47,22 @@ export default async function BookingPage({ params }: BookingPageProps) {
             ₹{court.pricePerHour.toLocaleString("en-IN")}/hr
           </span>
         </p>
-        <p className="mt-1 text-gray-500">Venue: {court.venue.name}</p>
+        <p className="mt-1 text-gray-500 font-medium">
+          Venue: {court.venue.name}
+        </p>
+
+        <p className="mt-4 text-gray-700 font-semibold">
+          Court Timings: {formatHour(court.openTime)} –{" "}
+          {formatHour(court.closeTime)}
+        </p>
       </header>
 
       <div className="border-t border-gray-200 pt-6">
-        <BookingForm courtId={court.id} />
+        <BookingForm
+          courtId={court.id}
+          openTime={court.openTime}
+          closeTime={court.closeTime}
+        />
       </div>
     </main>
   );
