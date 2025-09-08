@@ -46,8 +46,13 @@ export function LoginForm() {
       toast.success("Login successful!");
 
       const session = await getSession();
+      const isAdmin = session?.user?.role === "ADMIN";
       const isManager = session?.user?.role === "OWNER";
-      console.log({ session, isManager });
+
+      if (isAdmin) {
+        router.replace("/admin");
+        return;
+      }
 
       const callbackUrl = searchParams.get("callbackUrl");
 

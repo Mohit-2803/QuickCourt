@@ -38,12 +38,16 @@ export default withAuth(
     }
 
     // Player-only routes
-    if (pathname.startsWith("/player") && role !== "USER") {
+    if (pathname.startsWith("/player") && role !== "USER" && role !== "ADMIN") {
       return NextResponse.rewrite(new URL("/denied", req.url));
     }
 
     // Venue Owner-only routes
-    if (pathname.startsWith("/manager") && role !== "OWNER") {
+    if (
+      pathname.startsWith("/manager") &&
+      role !== "OWNER" &&
+      role !== "ADMIN"
+    ) {
       return NextResponse.rewrite(new URL("/denied", req.url));
     }
 
