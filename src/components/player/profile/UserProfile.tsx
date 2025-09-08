@@ -2,7 +2,6 @@
 
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { User } from "@/generated/prisma/wasm";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import EditProfileModal from "./edit-profile-modal";
+import { User } from "@prisma/client";
 
 interface UserProfileProps {
   user: Pick<User, "fullName" | "email" | "avatarUrl" | "role" | "createdAt">;

@@ -106,32 +106,34 @@ export async function getManagerBookings(
     }),
   ]);
 
-  const items: ManagerBookingRow[] = bookings.map((b) => {
-    const start = new Date(b.startTime);
-    const end = new Date(b.endTime);
-    const method: ManagerBookingRow["method"] = b.payment?.paymentMethod
-      ?.toLowerCase()
-      .includes("upi")
-      ? "UPI"
-      : b.payment?.paymentMethod?.toLowerCase().includes("card")
-      ? "Card"
-      : b.payment?.paymentMethod
-      ? "Cash"
-      : "Unknown";
+  const items: ManagerBookingRow[] = bookings.map(
+    (b: (typeof bookings)[number]) => {
+      const start = new Date(b.startTime);
+      const end = new Date(b.endTime);
+      const method: ManagerBookingRow["method"] = b.payment?.paymentMethod
+        ?.toLowerCase()
+        .includes("upi")
+        ? "UPI"
+        : b.payment?.paymentMethod?.toLowerCase().includes("card")
+        ? "Card"
+        : b.payment?.paymentMethod
+        ? "Cash"
+        : "Unknown";
 
-    return {
-      id: `BK${b.id.toString().padStart(4, "0")}`,
-      user: b.user.fullName,
-      court: b.court.name,
-      sport: b.court.sport,
-      venue: b.court.venue.name,
-      date: toYMD(start),
-      time: toTimeRange(start, end),
-      amount: b.payment?.amount ?? 0, // minor units
-      status: b.status as ManagerBookingRow["status"],
-      method,
-    };
-  });
+      return {
+        id: `BK${b.id.toString().padStart(4, "0")}`,
+        user: b.user.fullName,
+        court: b.court.name,
+        sport: b.court.sport,
+        venue: b.court.venue.name,
+        date: toYMD(start),
+        time: toTimeRange(start, end),
+        amount: b.payment?.amount ?? 0, // minor units
+        status: b.status as ManagerBookingRow["status"],
+        method,
+      };
+    }
+  );
 
   return { items, total, page: Math.max(page, 1), pageSize: take };
 }

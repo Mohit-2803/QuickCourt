@@ -152,21 +152,38 @@ export async function getCourtDetails(
         longitude: court.venue.longitude,
       },
     },
-    moreCourts: siblingCourts.map((c) => ({
-      id: c.id,
-      name: c.name,
-      sport: c.sport,
-      pricePerHour: c.pricePerHour,
-      ratingAvg: c.ratingAgg?.avg ?? null,
-      ratingCount: c.ratingAgg?.count ?? 0,
-      image: c.image,
-    })),
-    reviews: courtReviews.map((r) => ({
-      id: r.id,
-      user: r.user.fullName,
-      rating: r.rating,
-      text: r.comment,
-      createdAt: r.createdAt.toISOString(),
-    })),
+    moreCourts: siblingCourts.map(
+      (c: {
+        id: number;
+        name: string;
+        sport: string;
+        pricePerHour: number;
+        image: string;
+        ratingAgg?: { avg: number | null; count: number | null } | null;
+      }) => ({
+        id: c.id,
+        name: c.name,
+        sport: c.sport,
+        pricePerHour: c.pricePerHour,
+        ratingAvg: c.ratingAgg?.avg ?? null,
+        ratingCount: c.ratingAgg?.count ?? 0,
+        image: c.image,
+      })
+    ),
+    reviews: courtReviews.map(
+      (r: {
+        id: number;
+        rating: number;
+        comment: string | null;
+        createdAt: Date;
+        user: { fullName: string };
+      }) => ({
+        id: r.id,
+        user: r.user.fullName,
+        rating: r.rating,
+        text: r.comment,
+        createdAt: r.createdAt.toISOString(),
+      })
+    ),
   };
 }

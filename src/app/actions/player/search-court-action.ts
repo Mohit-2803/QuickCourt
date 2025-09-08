@@ -61,17 +61,36 @@ export async function searchCourtsByCity(input: SearchCourtSchemaValues) {
     },
   });
 
-  const items = courts.map((c) => ({
-    id: c.id,
-    name: c.name,
-    venue: c.venue.name,
-    sport: c.sport,
-    price: c.pricePerHour,
-    image: c.image,
-    location: [c.venue.city, c.venue.state].filter(Boolean).join(", "),
-    ratingAvg: c.ratingAgg?.avg ?? null,
-    ratingCount: c.ratingAgg?.count ?? 0,
-  }));
+  const items = courts.map(
+    (c: {
+      id: number;
+      name: string;
+      sport: string;
+      pricePerHour: number;
+      image: string;
+      venue: {
+        name: string;
+        city: string;
+        state: string | null;
+        country: string | null;
+        approved: boolean;
+      };
+      ratingAgg?: {
+        avg?: number | null;
+        count?: number;
+      } | null;
+    }) => ({
+      id: c.id,
+      name: c.name,
+      venue: c.venue.name,
+      sport: c.sport,
+      price: c.pricePerHour,
+      image: c.image,
+      location: [c.venue.city, c.venue.state].filter(Boolean).join(", "),
+      ratingAvg: c.ratingAgg?.avg ?? null,
+      ratingCount: c.ratingAgg?.count ?? 0,
+    })
+  );
 
   return {
     ok: true,
@@ -171,17 +190,34 @@ export async function searchCourts(
     take,
   });
 
-  const items: SearchCourtsResultItem[] = courts.map((c) => ({
-    id: c.id,
-    name: c.name,
-    venue: c.venue.name,
-    sport: c.sport,
-    price: c.pricePerHour,
-    image: c.image,
-    location: [c.venue.city, c.venue.state].filter(Boolean).join(", "),
-    ratingAvg: c.ratingAgg?.avg ?? null,
-    ratingCount: c.ratingAgg?.count ?? 0,
-  }));
+  const items: SearchCourtsResultItem[] = courts.map(
+    (c: {
+      id: number;
+      name: string;
+      sport: string;
+      pricePerHour: number;
+      image: string;
+      venue: {
+        name: string;
+        city: string;
+        state: string | null;
+      };
+      ratingAgg?: {
+        avg?: number | null;
+        count?: number;
+      } | null;
+    }) => ({
+      id: c.id,
+      name: c.name,
+      venue: c.venue.name,
+      sport: c.sport,
+      price: c.pricePerHour,
+      image: c.image,
+      location: [c.venue.city, c.venue.state].filter(Boolean).join(", "),
+      ratingAvg: c.ratingAgg?.avg ?? null,
+      ratingCount: c.ratingAgg?.count ?? 0,
+    })
+  );
 
   return { items, total, page, pageSize };
 }

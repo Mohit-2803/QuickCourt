@@ -69,82 +69,84 @@ export async function POST(req: Request) {
     }
 
     // Run transactional booking process
-    const booking = await prisma.$transaction(async (tx) => {
-      const conflict = await slotOverlaps(tx, courtId, start, end);
-      if (conflict) {
-        throw new Error("This slot is already booked!");
-      }
+    const booking = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const conflict = await slotOverlaps(tx, courtId, start, end);
+        if (conflict) {
+          throw new Error("This slot is already booked!");
+        }
 
-      const court = await tx.court.findUnique({ where: { id: courtId } });
-      if (!court) {
-        throw new Error("Court not found");
-      }
+        const court = await tx.court.findUnique({ where: { id: courtId } });
+        if (!court) {
+          throw new Error("Court not found");
+        }
 
-      const durationHours = (+end - +start) / 36e5;
-      const amount = Math.round(court.pricePerHour * durationHours * 100);
+        const durationHours = (+end - +start) / 36e5;
+        const amount = Math.round(court.pricePerHour * durationHours * 100);
 
-      const sessionStripe = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        mode: "payment",
-        line_items: [
-          {
-            price_data: {
-              currency: court.currency.toLowerCase(),
-              product_data: {
-                name: `Booking for ${court.name}`,
-                ...(notes ? { description: notes } : {}),
+        const sessionStripe = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          mode: "payment",
+          line_items: [
+            {
+              price_data: {
+                currency: court.currency.toLowerCase(),
+                product_data: {
+                  name: `Booking for ${court.name}`,
+                  ...(notes ? { description: notes } : {}),
+                },
+                unit_amount: amount,
               },
-              unit_amount: amount,
+              quantity: 1,
             },
-            quantity: 1,
+          ],
+          metadata: {
+            courtId: String(courtId),
+            startTime,
+            endTime,
+            notes,
+            userId: session.user.id,
+            idempotencyKey, // Add idempotencyKey to metadata for webhook reconciliation
           },
-        ],
-        metadata: {
-          courtId: String(courtId),
-          startTime,
-          endTime,
-          notes,
-          userId: session.user.id,
-          idempotencyKey, // Add idempotencyKey to metadata for webhook reconciliation
-        },
-        success_url: `${process.env.NEXT_PUBLIC_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_URL}/booking/cancel`,
-      });
+          success_url: `${process.env.NEXT_PUBLIC_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${process.env.NEXT_PUBLIC_URL}/booking/cancel`,
+        });
 
-      // Ensure sessionStripe.url exists before trying to use it
-      if (!sessionStripe.url) {
-        throw new Error("Failed to create Stripe checkout session URL.");
+        // Ensure sessionStripe.url exists before trying to use it
+        if (!sessionStripe.url) {
+          throw new Error("Failed to create Stripe checkout session URL.");
+        }
+
+        const newBooking = await tx.booking.create({
+          data: {
+            userId: Number(session.user.id),
+            courtId,
+            startTime: start,
+            endTime: end,
+            bookedForDate: start,
+            notes,
+            status: "PENDING",
+            idempotencyKey, // This is already stored on Booking
+            stripeCheckoutUrl: sessionStripe.url,
+            payment: {
+              create: {
+                gateway: "stripe",
+                stripePaymentIntentId: null, // Set to null initially
+                stripeCheckoutSessionId: sessionStripe.id, // <--- Store the checkout session ID
+                idempotencyKey: idempotencyKey, // <--- Store idempotencyKey on Payment too
+                amount,
+                paymentMethod: "card",
+                currency: court.currency,
+                status: "PENDING",
+              },
+            },
+          },
+          include: { payment: true },
+        });
+
+        return newBooking;
       }
-
-      const newBooking = await tx.booking.create({
-        data: {
-          userId: Number(session.user.id),
-          courtId,
-          startTime: start,
-          endTime: end,
-          bookedForDate: start,
-          notes,
-          status: "PENDING",
-          idempotencyKey, // This is already stored on Booking
-          stripeCheckoutUrl: sessionStripe.url,
-          payment: {
-            create: {
-              gateway: "stripe",
-              stripePaymentIntentId: null, // Set to null initially
-              stripeCheckoutSessionId: sessionStripe.id, // <--- Store the checkout session ID
-              idempotencyKey: idempotencyKey, // <--- Store idempotencyKey on Payment too
-              amount,
-              paymentMethod: "card",
-              currency: court.currency,
-              status: "PENDING",
-            },
-          },
-        },
-        include: { payment: true },
-      });
-
-      return newBooking;
-    });
+    );
 
     return NextResponse.json({ url: booking.stripeCheckoutUrl });
   } catch (error: unknown) {

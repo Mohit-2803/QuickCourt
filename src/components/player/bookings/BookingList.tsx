@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Booking, Court, Payment } from "@/generated/prisma/wasm";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { cancelBooking } from "@/app/actions/player/cancel-booking";
+import { Booking, Court, Payment } from "@prisma/client";
 
 interface BookingWithRelations extends Booking {
   court: Court;

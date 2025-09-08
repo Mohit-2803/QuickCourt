@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 
 export function BookingCalendar({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   items,
 }: {
   items: {

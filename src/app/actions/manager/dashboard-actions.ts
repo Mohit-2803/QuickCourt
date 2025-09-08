@@ -195,33 +195,50 @@ export async function getManagerDashboardData(): Promise<ManagerDashboardData> {
   }));
 
   // Recent bookings mapped
-  const recent: RecentBookingItem[] = recentBookings.map((b) => {
-    const start = new Date(b.startTime);
-    const end = new Date(b.endTime);
-    return {
-      id: `BK${b.id.toString().padStart(4, "0")}`,
-      userName: b.user.fullName,
-      userAvatar: b.user.avatarUrl,
-      court: b.court.name,
-      date: toYMD(start),
-      time: toTimeRange(start, end),
-      status:
-        b.status === "CONFIRMED"
-          ? "confirmed"
-          : b.status === "PENDING"
-          ? "pending"
-          : "cancelled",
-    };
-  });
+  const recent: RecentBookingItem[] = recentBookings.map(
+    (b: {
+      id: number;
+      startTime: Date;
+      endTime: Date;
+      status: string;
+      user: { fullName: string; avatarUrl?: string | null };
+      court: { name: string };
+    }) => {
+      const start = new Date(b.startTime);
+      const end = new Date(b.endTime);
+      return {
+        id: `BK${b.id.toString().padStart(4, "0")}`,
+        userName: b.user.fullName,
+        userAvatar: b.user.avatarUrl,
+        court: b.court.name,
+        date: toYMD(start),
+        time: toTimeRange(start, end),
+        status:
+          b.status === "CONFIRMED"
+            ? "confirmed"
+            : b.status === "PENDING"
+            ? "pending"
+            : "cancelled",
+      };
+    }
+  );
 
   // Calendar items
-  const calendar: CalendarBooking[] = calendarBookings.map((b) => ({
-    id: b.id,
-    title: `${b.court.name} - ${b.court.sport}`,
-    start: new Date(b.startTime).toISOString(),
-    end: new Date(b.endTime).toISOString(),
-    status: b.status as "CONFIRMED" | "PENDING" | "CANCELLED",
-  }));
+  const calendar: CalendarBooking[] = calendarBookings.map(
+    (b: {
+      id: number;
+      court: { name: string; sport: string };
+      startTime: Date;
+      endTime: Date;
+      status: string;
+    }) => ({
+      id: b.id,
+      title: `${b.court.name} - ${b.court.sport}`,
+      start: new Date(b.startTime).toISOString(),
+      end: new Date(b.endTime).toISOString(),
+      status: b.status as "CONFIRMED" | "PENDING" | "CANCELLED",
+    })
+  );
 
   return { stats, trends, earnings, calendar, recent };
 }
