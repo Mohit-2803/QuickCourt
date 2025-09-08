@@ -4,7 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 
-export function BookingCalendar() {
+export function BookingCalendar({
+  items,
+}: {
+  items: {
+    id: number;
+    title: string;
+    start: string;
+    end: string;
+    status: "CONFIRMED" | "PENDING" | "CANCELLED";
+  }[];
+}) {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
   return (

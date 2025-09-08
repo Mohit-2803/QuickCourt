@@ -1,6 +1,7 @@
+// components/manager/bookings/bookings-table.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -14,84 +15,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
+import {
+  getManagerBookings,
+  type ManagerBookingRow,
+} from "@/app/actions/manager/booking-action";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-type BookingRow = {
-  id: string;
-  user: string;
-  court: string;
-  sport: string;
-  venue: string;
-  date: string; // YYYY-MM-DD
-  time: string; // 17:30-18:30
-  amount: number; // in INR
-  status: "CONFIRMED" | "PENDING" | "CANCELLED";
-  method: "UPI" | "Card" | "Cash";
-};
-
-const demo: BookingRow[] = [
-  {
-    id: "BK1001",
-    user: "Aarav Patel",
-    court: "Court A",
-    sport: "Badminton",
-    venue: "QuickCourt Arena",
-    date: "2025-09-03",
-    time: "17:30-18:30",
-    amount: 600,
-    status: "CONFIRMED",
-    method: "UPI",
-  },
-  {
-    id: "BK1002",
-    user: "Neha Sharma",
-    court: "Court B",
-    sport: "Badminton",
-    venue: "QuickCourt Arena",
-    date: "2025-09-03",
-    time: "19:00-20:00",
-    amount: 600,
-    status: "PENDING",
-    method: "Card",
-  },
-  {
-    id: "BK1003",
-    user: "Rahul Mehta",
-    court: "Court 1",
-    sport: "Tennis",
-    venue: "Metro Sports Hub",
-    date: "2025-09-04",
-    time: "07:00-08:00",
-    amount: 800,
-    status: "CANCELLED",
-    method: "Cash",
-  },
-  {
-    id: "BK1004",
-    user: "Kiran Rao",
-    court: "Turf 1",
-    sport: "Football",
-    venue: "Metro Sports Hub",
-    date: "2025-09-04",
-    time: "20:00-21:00",
-    amount: 1500,
-    status: "CONFIRMED",
-    method: "UPI",
-  },
-  {
-    id: "BK1005",
-    user: "Isha Verma",
-    court: "Court A",
-    sport: "Badminton",
-    venue: "QuickCourt Arena",
-    date: "2025-09-05",
-    time: "06:00-07:00",
-    amount: 500,
-    status: "CONFIRMED",
-    method: "Card",
-  },
-];
-
-const statusClasses: Record<BookingRow["status"], string> = {
+const statusClasses: Record<ManagerBookingRow["status"], string> = {
   CONFIRMED: "bg-emerald-600/15 text-emerald-500 border-emerald-700/30",
   PENDING: "bg-amber-600/15 text-amber-500 border-amber-700/30",
   CANCELLED: "bg-red-600/15 text-red-500 border-red-700/30",
@@ -99,26 +36,50 @@ const statusClasses: Record<BookingRow["status"], string> = {
 
 export default function BookingsTable() {
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"ALL" | BookingRow["status"]>("ALL");
+  const [status, setStatus] = useState<"ALL" | ManagerBookingRow["status"]>(
+    "ALL"
+  );
 
-  const filtered = useMemo(() => {
-    return demo.filter((b) => {
-      const matchesText =
-        !query ||
-        b.id.toLowerCase().includes(query.toLowerCase()) ||
-        b.user.toLowerCase().includes(query.toLowerCase()) ||
-        b.venue.toLowerCase().includes(query.toLowerCase()) ||
-        b.sport.toLowerCase().includes(query.toLowerCase());
+  const [rows, setRows] = useState<ManagerBookingRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      const matchesStatus = status === "ALL" ? true : b.status === status;
-      return matchesText && matchesStatus;
+  // Pagination state
+  const [page, setPage] = useState(1); // 1-based
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+
+  async function load() {
+    setLoading(true);
+    const res = await getManagerBookings({
+      q: query || undefined,
+      status: status === "ALL" ? undefined : status,
+      page,
+      pageSize,
     });
+    setRows(res.items);
+    setTotal(res.total);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, status, page, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
   }, [query, status]);
+
+  const filtered = useMemo(() => rows, [rows]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endIdx = Math.min(total, page * pageSize);
 
   return (
     <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm min-h-screen">
       <CardContent className="p-4 md:p-6">
-        {/* Filters */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
           <div className="flex items-center gap-2 max-w-md w-full">
             <div className="relative w-full">
@@ -135,7 +96,9 @@ export default function BookingsTable() {
           <Tabs
             defaultValue="ALL"
             value={status}
-            onValueChange={(v) => setStatus(v as "ALL" | BookingRow["status"])}
+            onValueChange={(v) =>
+              setStatus(v as "ALL" | ManagerBookingRow["status"])
+            }
           >
             <TabsList>
               <TabsTrigger className="cursor-pointer" value="ALL">
@@ -154,60 +117,142 @@ export default function BookingsTable() {
           </Tabs>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="whitespace-nowrap">Booking ID</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Venue</TableHead>
-                <TableHead>Sport</TableHead>
-                <TableHead>Court</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell className="font-medium">{b.id}</TableCell>
-                  <TableCell>{b.user}</TableCell>
-                  <TableCell className="whitespace-nowrap">{b.venue}</TableCell>
-                  <TableCell>{b.sport}</TableCell>
-                  <TableCell>{b.court}</TableCell>
-                  <TableCell>{b.date}</TableCell>
-                  <TableCell>{b.time}</TableCell>
-                  <TableCell>{b.method}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={statusClasses[b.status]}
-                    >
-                      {b.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-green-800 font-medium">
-                    ₹{b.amount.toLocaleString("en-IN")}.00
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={10}
-                    className="text-center text-muted-foreground font-medium py-8"
+        {loading ? (
+          <div className="grid grid-cols-1 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">
+                      Booking ID
+                    </TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Venue</TableHead>
+                    <TableHead>Sport</TableHead>
+                    <TableHead>Court</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((b) => (
+                    <TableRow key={b.id}>
+                      <TableCell className="font-medium">{b.id}</TableCell>
+                      <TableCell>{b.user}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {b.venue}
+                      </TableCell>
+                      <TableCell>{b.sport}</TableCell>
+                      <TableCell>{b.court}</TableCell>
+                      <TableCell>{b.date}</TableCell>
+                      <TableCell>{b.time}</TableCell>
+                      <TableCell>{b.method}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={statusClasses[b.status]}
+                        >
+                          {b.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-green-800 font-medium">
+                        ₹{Number(b.amount / 100).toLocaleString("en-IN")}.00
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={10}
+                        className="text-center text-muted-foreground font-medium py-8"
+                      >
+                        No bookings found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination controls */}
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="text-sm text-muted-foreground">
+                {total === 0
+                  ? "No results"
+                  : `Showing ${startIdx}-${endIdx} of ${total}`}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(v) => setPageSize(Number(v))}
+                >
+                  <SelectTrigger className="w-[110px]">
+                    <SelectValue placeholder="Page size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 50, 100].map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n} / page
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
                   >
-                    No bookings found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    First
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Prev
+                  </Button>
+                  <span className="text-sm min-w-[80px] text-center">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => setPage(totalPages)}
+                    disabled={page >= totalPages}
+                  >
+                    Last
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

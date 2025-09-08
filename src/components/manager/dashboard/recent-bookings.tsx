@@ -10,10 +10,10 @@ type BookingStatus = "confirmed" | "pending" | "cancelled";
 interface Booking {
   id: string;
   userName: string;
-  userAvatar?: string;
+  userAvatar?: string | null;
   court: string;
-  date: string; // ISO or friendly string
-  time: string; // e.g., "5:30 PM"
+  date: string; // YYYY-MM-DD (or friendly string)
+  time: string; // e.g., "17:30-18:30"
   status: BookingStatus;
 }
 
@@ -23,50 +23,11 @@ const statusVariant: Record<BookingStatus, string> = {
   cancelled: "bg-red-600/15 text-red-500 border-red-700/30",
 };
 
-const mockRecent: Booking[] = [
-  {
-    id: "bkg_001",
-    userName: "Aarav Patel",
-    userAvatar: "",
-    court: "Court A",
-    date: "2025-09-03",
-    time: "5:30 PM",
-    status: "confirmed",
-  },
-  {
-    id: "bkg_002",
-    userName: "Neha Sharma",
-    userAvatar: "",
-    court: "Court B",
-    date: "2025-09-03",
-    time: "6:15 PM",
-    status: "pending",
-  },
-  {
-    id: "bkg_003",
-    userName: "Rahul Mehta",
-    userAvatar: "",
-    court: "Court C",
-    date: "2025-09-04",
-    time: "7:00 PM",
-    status: "cancelled",
-  },
-  {
-    id: "bkg_004",
-    userName: "Kiran Rao",
-    userAvatar: "",
-    court: "Court A",
-    date: "2025-09-04",
-    time: "8:00 PM",
-    status: "confirmed",
-  },
-];
-
 export function RecentBookings({
-  items = mockRecent,
+  items,
   className,
 }: {
-  items?: Booking[];
+  items: Booking[]; // now required
   className?: string;
 }) {
   return (
@@ -82,45 +43,52 @@ export function RecentBookings({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
-        <ul className="space-y-3">
-          {items.map((b) => {
-            // only first letter
-            const initials = b.userName
-              .split(" ")
-              .map((p) => p.charAt(0))
-              .slice(0, 2)
-              .join("")
-              .toUpperCase();
+        {items.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            No recent bookings
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {items.map((b) => {
+              const initials = b.userName
+                .split(" ")
+                .map((p) => p.charAt(0))
+                .slice(0, 2)
+                .join("")
+                .toUpperCase();
 
-            return (
-              <li
-                key={b.id}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={b.userAvatar || ""} alt={b.userName} />
-                    <AvatarFallback className="font-medium">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{b.userName}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {b.court} • {b.date} • {b.time}
-                    </p>
-                  </div>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={cn("shrink-0", statusVariant[b.status])}
+              return (
+                <li
+                  key={b.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
                 >
-                  {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
-                </Badge>
-              </li>
-            );
-          })}
-        </ul>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={b.userAvatar || ""} alt={b.userName} />
+                      <AvatarFallback className="font-medium">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {b.userName}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {b.court} • {b.date} • {b.time}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={cn("shrink-0", statusVariant[b.status])}
+                  >
+                    {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
+                  </Badge>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

@@ -10,26 +10,26 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export function BookingTrends({
+export function EarningsLineChart({
   data,
 }: {
-  data: { day: string; bookings: number }[];
+  data: { date: string; net: number }[];
 }) {
   return (
     <Card className="rounded-2xl shadow-sm">
       <CardHeader>
-        <CardTitle>Weekly Booking Trends</CardTitle>
+        <CardTitle>Daily Net Earnings</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
-              <XAxis dataKey="day" />
+              <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
               <Line
                 type="monotone"
-                dataKey="bookings"
+                dataKey="net"
                 stroke="#16a34a"
                 strokeWidth={2}
               />

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { PaymentStatus, BookingStatus } from "@/generated/prisma";
+import { revalidatePath } from "next/cache";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: unknown) {
+    console.error(`Webhook Error: ${err}`);
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
       { error: `Webhook Error: ${message}` },
@@ -102,6 +104,8 @@ export async function POST(request: Request) {
             `Successfully confirmed Booking ID: ${updatedBooking.id}`
           );
           console.log(`Successfully updated Payment ID: ${updatedPayment.id}`);
+          revalidatePath("/manager/dashboard");
+          revalidatePath("/manager/bookings");
         } else {
           console.warn(
             `Webhook for idempotencyKey ${idempotencyKey} received, but no corresponding PENDING booking was found. It might have already been processed.`
@@ -170,6 +174,12 @@ export async function POST(request: Request) {
       `Updated ${updatedBookings.count} Booking records to CANCELLED.`
     );
   }
+  revalidatePath("/manager/dashboard");
+  revalidatePath("/manager/bookings");
 
   return NextResponse.json({ received: true });
+}
+
+export async function GET() {
+  return NextResponse.json({ status: "Stripe Webhook endpoint is live." });
 }

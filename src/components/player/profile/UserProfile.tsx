@@ -23,7 +23,7 @@ export default function UserProfile({ user }: UserProfileProps) {
   const router = useRouter();
 
   return (
-    <main className="max-w-lg mx-auto my-12">
+    <main className="max-w-lg mx-auto my-12 min-h-screen">
       <Card className="shadow-lg rounded-3xl">
         <CardHeader className="flex flex-col items-center pt-10 pb-6">
           <Avatar className="w-28 h-28 mb-4">
@@ -46,7 +46,7 @@ export default function UserProfile({ user }: UserProfileProps) {
 
           <div className="mt-2 flex gap-2">
             <span className="uppercase bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full tracking-widest select-none">
-              {user.role}
+              {user.role === "OWNER" ? "Venue Owner" : "Player"}
             </span>
           </div>
 
@@ -55,15 +55,17 @@ export default function UserProfile({ user }: UserProfileProps) {
           </p>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-4 px-10">
-          <Button
-            onClick={() => router.push("/player/bookings")}
-            variant="outline"
-            className="w-full cursor-pointer"
-          >
-            My Bookings
-          </Button>
-        </CardContent>
+        {user.role !== "OWNER" && (
+          <CardContent className="flex flex-col gap-4 px-10">
+            <Button
+              onClick={() => router.push("/player/bookings")}
+              variant="outline"
+              className="w-full cursor-pointer"
+            >
+              My Bookings
+            </Button>
+          </CardContent>
+        )}
 
         <CardFooter className="flex flex-row gap-3 px-10 pb-10 pt-4 w-fit">
           <EditProfileModal

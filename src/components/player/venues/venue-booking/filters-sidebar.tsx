@@ -9,9 +9,28 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 
-const sports = ["Badminton", "Tennis", "Football", "Squash", "Table Tennis"];
+const sports = [
+  "Badminton",
+  "Tennis",
+  "Football",
+  "Squash",
+  "Table Tennis",
+  "Volleyball",
+  "Cricket",
+  "Basketball",
+  "Box Cricket",
+];
 
-export function FiltersSidebar() {
+export function FiltersSidebar({
+  onApply,
+}: {
+  onApply: (filters: {
+    q: string;
+    selected: string[];
+    price: [number, number];
+    rating: string;
+  }) => void;
+}) {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [price, setPrice] = useState<[number, number]>([300, 1500]);
@@ -57,6 +76,7 @@ export function FiltersSidebar() {
                 <Checkbox
                   checked={selected.includes(s)}
                   onCheckedChange={() => toggleSport(s)}
+                  className="cursor-pointer"
                 />
                 <span className="text-sm">{s}</span>
               </label>
@@ -70,7 +90,7 @@ export function FiltersSidebar() {
             value={price}
             onValueChange={(val) => setPrice(val as [number, number])}
             min={0}
-            max={3000}
+            max={10000}
             step={50}
             minStepsBetweenThumbs={1}
           />
@@ -80,24 +100,35 @@ export function FiltersSidebar() {
           </div>
         </div>
 
-        {/* Rating */}
         <div className="space-y-3">
           <Label>Rating</Label>
           <RadioGroup value={rating} onValueChange={setRating}>
             <div className="flex items-center gap-2">
-              <RadioGroupItem id="r-any" value="any" />
+              <RadioGroupItem
+                id="r-any"
+                value="any"
+                className="cursor-pointer"
+              />
               <Label htmlFor="r-any">Any</Label>
             </div>
             <div className="flex items-center gap-2">
-              <RadioGroupItem id="r-45" value="4.5" />
+              <RadioGroupItem
+                id="r-45"
+                value="4.5"
+                className="cursor-pointer"
+              />
               <Label htmlFor="r-45">4.5+ stars</Label>
             </div>
             <div className="flex items-center gap-2">
-              <RadioGroupItem id="r-4" value="4.0" />
+              <RadioGroupItem id="r-4" value="4.0" className="cursor-pointer" />
               <Label htmlFor="r-4">4.0+ stars</Label>
             </div>
             <div className="flex items-center gap-2">
-              <RadioGroupItem id="r-35" value="3.5" />
+              <RadioGroupItem
+                id="r-35"
+                value="3.5"
+                className="cursor-pointer"
+              />
               <Label htmlFor="r-35">3.5+ stars</Label>
             </div>
           </RadioGroup>
@@ -107,12 +138,22 @@ export function FiltersSidebar() {
           <Button
             variant="outline"
             className="cursor-pointer"
-            onClick={clearAll}
+            onClick={() => {
+              clearAll();
+              onApply({
+                q: "",
+                selected: [],
+                price: [300, 1500],
+                rating: "any",
+              });
+            }}
           >
             Clear
           </Button>
-          <Button className="bg-orange-600 cursor-pointer hover:bg-orange-700">
-            {" "}
+          <Button
+            className="bg-orange-600 cursor-pointer hover:bg-orange-700"
+            onClick={() => onApply({ q, selected, price, rating })}
+          >
             Apply
           </Button>
         </div>

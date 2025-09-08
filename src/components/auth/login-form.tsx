@@ -47,6 +47,7 @@ export function LoginForm() {
 
       const session = await getSession();
       const isManager = session?.user?.role === "OWNER";
+      console.log({ session, isManager });
 
       const callbackUrl = searchParams.get("callbackUrl");
 

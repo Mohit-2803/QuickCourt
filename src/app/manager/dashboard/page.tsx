@@ -5,6 +5,7 @@ import { BookingTrends } from "@/components/manager/dashboard/booking-trends";
 import { EarningsChart } from "@/components/manager/dashboard/earnings-chart";
 import { BookingCalendar } from "@/components/manager/dashboard/booking-calendar";
 import { RecentBookings } from "@/components/manager/dashboard/recent-bookings";
+import { getManagerDashboardData } from "@/app/actions/manager/dashboard-actions";
 
 export const metadata = {
   title: "Dashboard",
@@ -12,30 +13,24 @@ export const metadata = {
 };
 
 export default async function ManagerDashboardPage() {
-  // Fetch initial stats from backend (mock for now)
-  const stats = {
-    totalBookings: 128,
-    activeCourts: 6,
-    earnings: 54200,
-    upcoming: 12,
-  };
+  const data = await getManagerDashboardData();
 
   return (
     <div className="mx-auto w-full max-w-7xl p-6 md:p-8 space-y-6">
       <DashboardHeader />
 
-      <StatsGrid stats={stats} />
+      <StatsGrid stats={data.stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Suspense
           fallback={<div className="h-64 rounded-xl bg-muted animate-pulse" />}
         >
-          <BookingTrends />
+          <BookingTrends data={data.trends} />
         </Suspense>
         <Suspense
           fallback={<div className="h-64 rounded-xl bg-muted animate-pulse" />}
         >
-          <EarningsChart />
+          <EarningsChart data={data.earnings} />
         </Suspense>
       </div>
 
@@ -44,8 +39,8 @@ export default async function ManagerDashboardPage() {
           fallback={<div className="h-96 rounded-xl bg-muted animate-pulse" />}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BookingCalendar />
-            <RecentBookings />
+            <BookingCalendar items={data.calendar} />
+            <RecentBookings items={data.recent} />
           </div>
         </Suspense>
       </div>

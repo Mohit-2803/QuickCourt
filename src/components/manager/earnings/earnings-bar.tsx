@@ -8,12 +8,13 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
-export function EarningsChart({
+export function EarningsBarChart({
   data,
 }: {
-  data: { month: string; earnings: number }[];
+  data: { month: string; gross: number; platformFees: number; net: number }[];
 }) {
   return (
     <Card className="rounded-2xl shadow-sm">
@@ -27,7 +28,25 @@ export function EarningsChart({
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="earnings" fill="#16a34a" radius={[8, 8, 0, 0]} />
+              <Legend />
+              <Bar
+                dataKey="gross"
+                fill="#1763bf"
+                name="Gross"
+                radius={[6, 6, 0, 0]}
+              />
+              <Bar
+                dataKey="platformFees"
+                fill="#f59e0b"
+                name="Platform Fees"
+                radius={[6, 6, 0, 0]}
+              />
+              <Bar
+                dataKey="net"
+                fill="#16a34a"
+                name="Net"
+                radius={[6, 6, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

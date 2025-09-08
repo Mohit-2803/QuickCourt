@@ -2,15 +2,15 @@
 import { Suspense } from "react";
 import BookingsTable from "@/components/manager/bookings/bookings-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getManagerBookingsMetadata } from "@/app/actions/manager/booking-action";
 
 export const metadata = {
   title: "Player Bookings",
   description: "Manage player bookings at your venues.",
 };
 
-export default function BookingsPage() {
-  // Demo counts for header
-  const totals = { all: 58, confirmed: 32, pending: 18, cancelled: 8 };
+export default async function BookingsPage() {
+  const totals = await getManagerBookingsMetadata();
 
   return (
     <div className="mx-auto w-full max-w-7xl p-6 md:p-8 space-y-6">

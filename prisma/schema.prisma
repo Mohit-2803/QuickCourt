@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -91,21 +90,21 @@ model Court {
 }
 
 model Booking {
-  id             Int           @id @default(autoincrement())
-  user           User          @relation(fields: [userId], references: [id])
-  userId         Int
-  court          Court         @relation(fields: [courtId], references: [id])
-  courtId        Int
-  startTime      DateTime
-  endTime        DateTime
-  bookedForDate  DateTime
-  status         BookingStatus @default(PENDING)
-  payment        Payment?
-  paymentId      Int?          @unique
-  idempotencyKey String?       @unique
-  stripeCheckoutUrl    String?
-  notes          String?
-  createdAt      DateTime      @default(now())
+  id                Int           @id @default(autoincrement())
+  user              User          @relation(fields: [userId], references: [id])
+  userId            Int
+  court             Court         @relation(fields: [courtId], references: [id])
+  courtId           Int
+  startTime         DateTime
+  endTime           DateTime
+  bookedForDate     DateTime
+  status            BookingStatus @default(PENDING)
+  payment           Payment?
+  paymentId         Int?          @unique
+  idempotencyKey    String?       @unique
+  stripeCheckoutUrl String?
+  notes             String?
+  createdAt         DateTime      @default(now())
 
   @@unique([courtId, startTime])
   @@index([userId])
@@ -114,24 +113,24 @@ model Booking {
 }
 
 model Payment {
-  id                    Int           @id @default(autoincrement())
-  booking               Booking?      @relation(fields: [bookingId], references: [id])
-  bookingId             Int?          @unique
-  gateway               String        @default("stripe")
-  stripePaymentIntentId String?       @unique
-  stripeChargeId        String?
-  stripeCheckoutSessionId String?     @unique 
-  idempotencyKey        String?       @unique 
-  amount                Int
-  currency              String        @default("INR")
-  status                PaymentStatus @default(PENDING)
-  receiptUrl            String?
-  paymentMethod         String?
-  createdAt             DateTime      @default(now())
+  id                      Int           @id @default(autoincrement())
+  booking                 Booking?      @relation(fields: [bookingId], references: [id])
+  bookingId               Int?          @unique
+  gateway                 String        @default("stripe")
+  stripePaymentIntentId   String?       @unique
+  stripeChargeId          String?
+  stripeCheckoutSessionId String?       @unique
+  idempotencyKey          String?       @unique
+  amount                  Int
+  currency                String        @default("INR")
+  status                  PaymentStatus @default(PENDING)
+  receiptUrl              String?
+  paymentMethod           String?
+  createdAt               DateTime      @default(now())
 
   @@index([stripePaymentIntentId])
   @@index([stripeCheckoutSessionId])
-  @@index([idempotencyKey]) 
+  @@index([idempotencyKey])
   @@index([status])
 }
 
