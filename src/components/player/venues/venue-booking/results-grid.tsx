@@ -53,7 +53,7 @@ export function ResultsGrid({ items }: { items: CourtCard[] }) {
                     <p className="text-sm text-muted-foreground font-medium">
                       {it.venue}
                     </p>
-                    <h3 className="font-medium">{it.name}</h3>
+                    <h3 className="font-medium truncate w-40">{it.name}</h3>
                   </div>
                   <div className="text-right font-semibold text-green-800">
                     ₹{it.price.toLocaleString("en-IN")}/hr

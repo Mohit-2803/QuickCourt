@@ -1,8 +1,7 @@
-// app/venues/page.tsx
 import { Suspense } from "react";
 import { VenuesHero } from "@/components/player/venues/venues-hero";
 import { SportsGrid } from "@/components/player/venues/sports-grid";
-import { FeaturedCourts } from "@/components/player/venues/featured-courts";
+import { FeaturedCourtsByCityWrapper } from "@/components/player/venues/featured-courts-wrapper";
 
 export const metadata = {
   title: "Venues",
@@ -10,54 +9,7 @@ export const metadata = {
 };
 
 export default async function VenuesPage() {
-  const carouselImages = ["/football.jpg", "/sport.jpg", "/login_img.jpg"];
-
-  const featured = [
-    {
-      id: 1,
-      name: "Court A",
-      venue: "QuickCourt Arena",
-      sport: "Badminton",
-      price: 600,
-      image: "/badminton.jpg",
-      location: "Bengaluru, KA",
-      ratingAvg: 4.6,
-      ratingCount: 128,
-    },
-    {
-      id: 2,
-      name: "Court 1",
-      venue: "Metro Sports Hub",
-      sport: "Tennis",
-      price: 800,
-      image: "/badminton.jpg",
-      location: "Bengaluru, KA",
-      ratingAvg: 4.2,
-      ratingCount: 76,
-    },
-    {
-      id: 3,
-      name: "Turf 1",
-      venue: "Metro Sports Hub",
-      sport: "Football",
-      price: 1500,
-      image: "/badminton.jpg",
-      location: "Bengaluru, KA",
-      ratingAvg: 4.5,
-      ratingCount: 91,
-    },
-    {
-      id: 4,
-      name: "Court B",
-      venue: "QuickCourt Arena",
-      sport: "Badminton",
-      price: 600,
-      image: "/badminton.jpg",
-      location: "Bengaluru, KA",
-      ratingAvg: 4.4,
-      ratingCount: 64,
-    },
-  ];
+  const carouselImages = ["/football.jpg", "/sport.jpg", "/sports-tools.jpg"];
 
   const sports = [
     { name: "Badminton", image: "/badminton.jpg" },
@@ -69,7 +21,7 @@ export default async function VenuesPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl p-6 md:p-8 space-y-10">
+    <div className="mx-auto max-w-7xl p-6 md:p-8 space-y-10 min-h-screen">
       <Suspense
         fallback={<div className="h-56 rounded-2xl bg-muted animate-pulse" />}
       >
@@ -79,7 +31,7 @@ export default async function VenuesPage() {
       <Suspense
         fallback={<div className="h-64 rounded-2xl bg-muted animate-pulse" />}
       >
-        <FeaturedCourts items={featured} />
+        <FeaturedCourtsByCityWrapper />
       </Suspense>
 
       <Suspense

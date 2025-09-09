@@ -50,7 +50,7 @@ export function LoginForm() {
       const isManager = session?.user?.role === "OWNER";
 
       if (isAdmin) {
-        router.replace("/admin");
+        router.replace("/admin/dashboard");
         return;
       }
 

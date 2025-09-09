@@ -16,6 +16,7 @@ export default function VenuesClientSection({
   const [items, setItems] = useState<SearchCourtsResultItem[]>(initialItems);
   const [loading, setLoading] = useState(false);
 
+  // Update items when city changes
   async function handleApply(filters: {
     q: string;
     selected: string[];
@@ -42,7 +43,6 @@ export default function VenuesClientSection({
     setItems(res.items);
     setLoading(false);
   }
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <aside className="lg:col-span-4 xl:col-span-3">
@@ -51,7 +51,7 @@ export default function VenuesClientSection({
       <main className="lg:col-span-8 xl:col-span-9">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
                 className="h-64 rounded-2xl bg-muted animate-pulse"

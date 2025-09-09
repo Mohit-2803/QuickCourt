@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import AuthProvider from "./context/AuthProvider";
 import { Footer } from "@/components/layout/Footer";
+import { CityProviderForFeaturedCourts } from "./context/CityProviderForFeaturedCourts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,15 +37,17 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <AuthProvider>
-          <Navbar />
-          {children}
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            duration={3500}
-          />
-          <Footer />
+          <CityProviderForFeaturedCourts>
+            <Navbar />
+            {children}
+            <Toaster
+              position="top-right"
+              richColors
+              closeButton
+              duration={3500}
+            />
+            <Footer />
+          </CityProviderForFeaturedCourts>
         </AuthProvider>
       </body>
     </html>

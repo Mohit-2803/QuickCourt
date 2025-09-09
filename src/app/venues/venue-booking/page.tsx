@@ -49,7 +49,7 @@ export default async function VenueBookingPage({
   // const total = res.ok ? res.total : 0;
 
   return (
-    <div className="mx-auto max-w-7xl p-6 md:p-8 space-y-6">
+    <div className="mx-auto max-w-7xl p-6 md:p-8 space-y-6 min-h-screen">
       <div className="rounded-2xl border text-center bg-card text-card-foreground shadow-sm p-5">
         <h1 className="text-xl md:text-xl font-semibold">
           Sports Venues in {capitalize(cityRaw || "Bengaluru")}: Discover and

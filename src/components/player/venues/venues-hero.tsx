@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useCity } from "@/app/context/CityProviderForFeaturedCourts";
 
 type Suggestion = {
   name?: string;
@@ -29,6 +30,7 @@ const GEOAPIFY_API_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_KEY;
 
 export function VenuesHero({ images }: { images: string[] }) {
   const router = useRouter();
+  const { setCity } = useCity();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,20 @@ export function VenuesHero({ images }: { images: string[] }) {
   const [navigating, setNavigating] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
 
+  // ---- Carousel autoplay ----
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 4000); // change every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  // ---- Search logic ----
   useEffect(() => {
     if (navigating) {
       setOpen(false);
@@ -100,11 +116,17 @@ export function VenuesHero({ images }: { images: string[] }) {
     setNavigating(true);
     const city = s.formatted?.split(",")[0] || s.city || s.name || "";
     setQuery(city);
+
+    // Update the city context
+    setCity(city);
+
+    // Navigate to venue booking with the selected city
     router.push(`/venues/venue-booking?city=${encodeURIComponent(city)}`);
   }
 
   return (
     <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+      {/* Left section: search */}
       <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col justify-center">
         <h1 className="text-2xl md:text-3xl font-semibold">
           Find sports venues near you
@@ -174,11 +196,18 @@ export function VenuesHero({ images }: { images: string[] }) {
         </div>
       </div>
 
+      {/* Right section: carousel with autoplay */}
       <div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
         <Carousel className="w-full">
-          <CarouselContent>
+          <CarouselContent
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              transition: "transform 0.6s ease-in-out",
+              display: "flex",
+            }}
+          >
             {images.map((src, i) => (
-              <CarouselItem key={i}>
+              <CarouselItem key={i} className="w-full flex-shrink-0">
                 <div className="relative h-64 md:h-80 w-full">
                   <Image
                     src={src}
@@ -191,8 +220,18 @@ export function VenuesHero({ images }: { images: string[] }) {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious
+            onClick={() =>
+              setCurrentIndex(
+                (prev) => (prev - 1 + images.length) % images.length
+              )
+            }
+          />
+          <CarouselNext
+            onClick={() =>
+              setCurrentIndex((prev) => (prev + 1) % images.length)
+            }
+          />
         </Carousel>
       </div>
     </section>

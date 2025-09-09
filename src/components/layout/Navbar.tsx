@@ -61,8 +61,15 @@ export function Navbar() {
     { href: "/manager/earnings", label: "Earnings" },
   ];
 
-  const isManager = role === "OWNER" || role === "ADMIN";
-  const links = isManager ? managerLinks : userLinks;
+  const adminLinks = [
+    { href: "/admin/dashboard", label: "Dashboard" },
+    { href: "/admin/venues", label: "Venues" },
+    { href: "/admin/users", label: "Users" },
+  ];
+
+  const isAdmin = role === "ADMIN";
+  const isManager = role === "OWNER";
+  const links = isAdmin ? adminLinks : isManager ? managerLinks : userLinks;
 
   useEffect(() => setOpen(false), [pathname]);
 

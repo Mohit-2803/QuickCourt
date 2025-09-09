@@ -1,13 +1,9 @@
-// app/actions/manager/court-event-actions.ts
+// app/actions/player/featured-actions.ts
 "use server";
 
 import prisma from "@/lib/prisma";
 import { recordEventSchema, RecordEventSchemaValues } from "@/lib/validation";
 
-/**
- * Record a CourtEvent with optional dedupe by idempotencyKey.
- * Denormalizes venue.city into CourtEvent.city for faster per-city aggregations.
- */
 export async function recordCourtEvent(input: RecordEventSchemaValues) {
   const parsed = recordEventSchema.safeParse(input);
   if (!parsed.success) {
@@ -30,21 +26,17 @@ export async function recordCourtEvent(input: RecordEventSchemaValues) {
     // Option A: add a unique constraint by key (requires schema change).
     // Option B: soft-check recent events (below). Keep small window to avoid heavy scans.
     if (idempotencyKey) {
-      // Optionally check for recent duplicates here if you want to implement deduplication.
       const existing = await prisma.courtEvent.findFirst({
         where: {
           courtId,
           kind,
-          // if you add idempotencyKey column in schema, check it directly:
           idempotencyKey,
-          createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) }, // last 5 minutes
+          createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) },
         },
         orderBy: { createdAt: "desc" },
       });
 
-      // If you decide to store idempotencyKey in CourtEvent, do exact match:
       if (existing) return { ok: true, skipped: true };
-      // No strict bail here by default.
     }
 
     await prisma.courtEvent.create({

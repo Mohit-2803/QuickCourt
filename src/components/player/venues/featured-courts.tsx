@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star } from "lucide-react";
+import { MapPin } from "lucide-react";
 import Link from "next/link";
+import { useCity } from "@/app/context/CityProviderForFeaturedCourts";
 
 type FeaturedItem = {
   id: number;
@@ -19,10 +20,14 @@ type FeaturedItem = {
 };
 
 export function FeaturedCourts({ items }: { items: FeaturedItem[] }) {
+  const { city } = useCity();
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xl font-semibold">Top Featured Courts</h2>
+        <h2 className="text-xl font-semibold">
+          Top Featured Courts in {city} today
+        </h2>
         <Link href="/venues/featured">
           <Button variant="outline" className="cursor-pointer">
             View all
@@ -51,35 +56,11 @@ export function FeaturedCourts({ items }: { items: FeaturedItem[] }) {
                   <p className="text-sm text-muted-foreground font-medium">
                     {it.venue}
                   </p>
-                  <h3 className="font-medium">{it.name}</h3>
+                  <h3 className="font-medium truncate w-40">{it.name}</h3>
                 </div>
                 <div className="text-right font-semibold text-green-800">
                   ₹{it.price.toLocaleString("en-IN")}/hr
                 </div>
-              </div>
-
-              {/* Rating row */}
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const filled = (it.ratingAvg ?? 0) >= i + 1;
-                  const half =
-                    (it.ratingAvg ?? 0) >= i + 0.5 &&
-                    (it.ratingAvg ?? 0) < i + 1;
-                  return (
-                    <Star
-                      key={i}
-                      className={
-                        filled || half
-                          ? "h-3.5 w-3.5 fill-orange-400 text-orange-400"
-                          : "h-3.5 w-3.5 text-muted-foreground"
-                      }
-                    />
-                  );
-                })}
-                <span className="ml-1 text-xs text-muted-foreground">
-                  {it.ratingAvg?.toFixed(1) ?? "—"}
-                  {it.ratingCount ? ` (${it.ratingCount})` : ""}
-                </span>
               </div>
 
               {/* Sport and location */}
@@ -93,7 +74,12 @@ export function FeaturedCourts({ items }: { items: FeaturedItem[] }) {
             </CardContent>
 
             <CardFooter>
-              <Button className="w-full cursor-pointer">View</Button>
+              <Link
+                className="w-full cursor-pointer"
+                href={`/venues/venue-booking/courts/${it.id}`}
+              >
+                <Button className="w-full cursor-pointer">View</Button>
+              </Link>
             </CardFooter>
           </Card>
         ))}
