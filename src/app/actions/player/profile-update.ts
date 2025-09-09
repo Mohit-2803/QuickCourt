@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 interface UpdateProfileInput {
   fullName: string;
@@ -27,5 +28,8 @@ export async function updateUserProfile(input: UpdateProfileInput) {
       avatarUrl: input.avatarUrl,
     },
   });
+  revalidatePath("/player/profile");
+  revalidatePath("/player/bookings");
+  revalidatePath("manager/profile");
   return { ok: true, user: updatedUser };
 }
