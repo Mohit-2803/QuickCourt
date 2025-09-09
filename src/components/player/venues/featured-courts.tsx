@@ -28,7 +28,10 @@ export function FeaturedCourts({ items }: { items: FeaturedItem[] }) {
         <h2 className="text-xl font-semibold">
           Top Featured Courts in {city} today
         </h2>
-        <Link href="/venues/featured">
+        <Link
+          href={`/venues/venue-booking?city=${encodeURIComponent(city)}`}
+          passHref
+        >
           <Button variant="outline" className="cursor-pointer">
             View all
           </Button>

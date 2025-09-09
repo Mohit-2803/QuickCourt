@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 export type UpdateUserPayload = {
   id: string;
@@ -31,6 +32,9 @@ export async function adminUpdateUser(input: UpdateUserPayload) {
     },
   });
 
+  revalidatePath("/admin/users");
+  revalidatePath("/manager/profile");
+  revalidatePath("/player/profile");
   return { ok: true };
 }
 
@@ -43,8 +47,6 @@ export async function adminDeleteUser(id: string) {
   if (session.user.id === id) {
     throw new Error("Cannot delete yourself");
   }
-
-  console.log("Deleting user", id);
 
   const idNum = Number(id);
   if (!Number.isFinite(idNum)) throw new Error("Invalid user id");
