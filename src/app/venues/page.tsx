@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default async function VenuesPage() {
-  const carouselImages = ["/football.jpg", "/sport.jpg", "/sports-tools.jpg"];
+  const carouselImages = ["/football.jpg", "/sport.jpg", "/soccer.jpg"];
 
   const sports = [
     { name: "Badminton", image: "/badminton.jpg" },
