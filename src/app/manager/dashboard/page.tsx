@@ -3,9 +3,9 @@ import { DashboardHeader } from "@/components/manager/dashboard/header";
 import { StatsGrid } from "@/components/manager/dashboard/stats-grid";
 import { BookingTrends } from "@/components/manager/dashboard/booking-trends";
 import { EarningsChart } from "@/components/manager/dashboard/earnings-chart";
-import { BookingCalendar } from "@/components/manager/dashboard/booking-calendar";
 import { RecentBookings } from "@/components/manager/dashboard/recent-bookings";
 import { getManagerDashboardData } from "@/app/actions/manager/dashboard-actions";
+import { BookingPieChart } from "@/components/manager/dashboard/booking-pie-chart";
 
 export const metadata = {
   title: "Dashboard",
@@ -39,7 +39,7 @@ export default async function ManagerDashboardPage() {
           fallback={<div className="h-96 rounded-xl bg-muted animate-pulse" />}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BookingCalendar items={data.calendar} />
+            <BookingPieChart items={data.calendar} />
             <RecentBookings items={data.recent} />
           </div>
         </Suspense>
