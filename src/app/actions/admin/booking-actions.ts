@@ -5,35 +5,10 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { Session } from "next-auth";
-import type { BookingStatus, PaymentStatus } from "@prisma/client";
+import type { BookingStatus } from "@prisma/client";
 
 function assertAdmin(session: Session | null) {
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
-}
-
-async function handleStatusSideEffects(bookingId: number, next: BookingStatus) {
-  if (next === "CANCELLED") {
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      select: {
-        paymentId: true,
-        status: true,
-        payment: { select: { status: true } },
-      },
-    });
-
-    if (
-      booking?.paymentId &&
-      booking.payment?.status === ("SUCCEEDED" as PaymentStatus)
-    ) {
-      await prisma.payment.update({
-        where: { id: booking.paymentId },
-        data: { status: "REFUNDED" },
-      });
-    }
-  }
-  revalidatePath("/admin/bookings");
-  revalidatePath("/manager/bookings");
 }
 
 export async function adminUpdateBookingStatus(
@@ -46,17 +21,44 @@ export async function adminUpdateBookingStatus(
   const bookingId = Number(id);
   if (!Number.isFinite(bookingId)) throw new Error("Invalid booking id");
 
-  await prisma.booking.update({
-    where: { id: bookingId },
-    data: { status: next },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: next },
+      });
 
-  await handleStatusSideEffects(bookingId, next);
+      if (next === "CANCELLED") {
+        const booking = await tx.booking.findUnique({
+          where: { id: bookingId },
+          select: {
+            paymentId: true,
+            status: true,
+            payment: { select: { status: true } },
+          },
+        });
 
-  revalidatePath("/admin/bookings");
-  revalidatePath("/manager/bookings");
+        if (booking?.paymentId && booking.payment?.status === "SUCCEEDED") {
+          await tx.payment.update({
+            where: { id: booking.paymentId },
+            data: { status: "REFUNDED" },
+          });
+        }
+      }
+    });
 
-  return { ok: true };
+    revalidatePath("/admin/bookings");
+    revalidatePath("/manager/bookings");
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Transaction failed:", error);
+    throw new Error(
+      `Failed to update booking status: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }
 
 export async function adminRefundBooking(id: string) {
@@ -65,20 +67,45 @@ export async function adminRefundBooking(id: string) {
   assertAdmin(session);
 
   const bookingId = Number(id);
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    select: { paymentId: true },
-  });
-  console.log("Booking to refund:", booking);
+  if (!Number.isFinite(bookingId)) throw new Error("Invalid booking id");
 
-  if (booking?.paymentId) {
-    await prisma.payment.update({
-      where: { id: booking.paymentId },
-      data: { status: "REFUNDED" },
+  try {
+    await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({
+        where: { id: bookingId },
+        select: {
+          paymentId: true,
+          payment: { select: { status: true } },
+        },
+      });
+      console.log("Booking to refund:", booking);
+
+      if (booking?.paymentId && booking.payment?.status === "SUCCEEDED") {
+        await tx.payment.update({
+          where: { id: booking.paymentId },
+          data: { status: "REFUNDED" },
+        });
+
+        await tx.booking.update({
+          where: { id: bookingId },
+          data: { status: "CANCELLED" },
+        });
+      } else {
+        throw new Error(
+          "Booking cannot be refunded: either payment not found or payment status is not SUCCEEDED"
+        );
+      }
     });
-  }
 
-  revalidatePath("/admin/bookings");
-  revalidatePath("/manager/bookings");
-  return { ok: true };
+    revalidatePath("/admin/bookings");
+    revalidatePath("/manager/bookings");
+    return { ok: true };
+  } catch (error) {
+    console.error("Refund transaction failed:", error);
+    throw new Error(
+      `Failed to refund booking: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }

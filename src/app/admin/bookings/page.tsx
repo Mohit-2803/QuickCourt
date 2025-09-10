@@ -36,7 +36,7 @@ export default async function AdminBookingsPage() {
 
   const rows: AdminBookingRow[] = bookings.map((b) => ({
     id: String(b.id),
-    status: b.status as AdminBookingRow["status"],
+    status: b.status,
     userName: b.user.fullName,
     userEmail: b.user.email,
     userAvatar: b.user.avatarUrl ?? null,
@@ -46,11 +46,9 @@ export default async function AdminBookingsPage() {
     city: b.court.venue.city,
     startTime: b.startTime.toISOString(),
     endTime: b.endTime.toISOString(),
-    amountMajor: Math.round((b.payment?.amount ?? 0) / 100),
-    paymentStatus:
-      (b.payment?.status as AdminBookingRow["paymentStatus"]) ?? null,
+    amountMajor: (b.payment?.amount ?? 0) / 100,
+    paymentStatus: b.payment?.status ?? null,
   }));
-
   const all = rows;
   const pending = rows.filter((r) => r.status === "PENDING");
   const confirmed = rows.filter((r) => r.status === "CONFIRMED");

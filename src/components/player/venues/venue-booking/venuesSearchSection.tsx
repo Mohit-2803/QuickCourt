@@ -18,8 +18,6 @@ export default function VenuesClientSection({
   const [items, setItems] = useState<SearchCourtsResultItem[]>(initialItems);
   const [loading, setLoading] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Update items when filters change
   async function handleApply(filters: {
     q: string;
     selected: string[];
@@ -46,7 +44,6 @@ export default function VenuesClientSection({
     setItems(res.items);
     setLoading(false);
 
-    // If we applied from mobile, close the side panel
     if (mobileOpen) {
       setMobileOpen(false);
     }
@@ -54,7 +51,6 @@ export default function VenuesClientSection({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Mobile: Filters button (visible only on small screens) */}
       <div className="lg:hidden col-span-1">
         <div className="flex items-center justify-between mb-2">
           <Button
@@ -69,7 +65,6 @@ export default function VenuesClientSection({
         </div>
       </div>
 
-      {/* Sidebar: hidden on mobile, visible on lg+ */}
       <aside className="hidden lg:block lg:col-span-4 xl:col-span-3">
         <FiltersSidebar onApply={handleApply} />
       </aside>
@@ -89,24 +84,27 @@ export default function VenuesClientSection({
         )}
       </main>
 
-      {/* Mobile side panel / drawer (only visible on small screens when mobileOpen) */}
       <div
+        id="mobile-filters-dialog"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="mobile-filters-title"
+        tabIndex={-1}
+        onKeyDown={(e) => e.key === "Escape" && setMobileOpen(false)}
         className={`fixed inset-0 z-50 lg:hidden ${
           mobileOpen ? "block" : "hidden"
         }`}
       >
-        {/* Scrim */}
         <div
           className="absolute inset-0 bg-black/40"
           onClick={() => setMobileOpen(false)}
         />
 
-        {/* Panel */}
         <div className="absolute right-0 top-0 h-full w-full max-w-sm bg-card shadow-xl overflow-auto">
           <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="text-lg font-medium">Filters</h3>
+            <h3 id="mobile-filters-title" className="text-lg font-medium">
+              Filters
+            </h3>
             <Button
               variant="ghost"
               onClick={() => setMobileOpen(false)}
