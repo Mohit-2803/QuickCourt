@@ -1,9 +1,9 @@
 import { getAdminMetrics } from "@/app/actions/admin/get-metrics";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Building2, CalendarCheck2, IndianRupee } from "lucide-react";
-import AdminQuickFilter from "@/components/admin/AdminQuickFilter";
-import BookingTrendChart from "@/components/admin/Booking-trend-chart";
-import RevenueBarChart from "@/components/admin/Revenue-bar-chart";
+import AdminQuickFilter from "@/components/admin/dashboard/AdminQuickFilter";
+import BookingTrendChart from "@/components/admin/dashboard/Booking-trend-chart";
+import RevenueBarChart from "@/components/admin/dashboard/Revenue-bar-chart";
 
 export const metadata = {
   title: "Admin Dashboard",

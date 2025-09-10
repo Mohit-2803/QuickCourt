@@ -65,6 +65,7 @@ export function Navbar() {
     { href: "/admin/dashboard", label: "Dashboard" },
     { href: "/admin/venues", label: "Venues" },
     { href: "/admin/users", label: "Users" },
+    { href: "/admin/bookings", label: "Bookings" },
   ];
 
   const isAdmin = role === "ADMIN";

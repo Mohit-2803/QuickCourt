@@ -5,6 +5,8 @@ import { FiltersSidebar } from "@/components/player/venues/venue-booking/filters
 import { ResultsGrid } from "@/components/player/venues/venue-booking/results-grid";
 import { searchCourts } from "@/app/actions/player/search-court-action";
 import type { SearchCourtsResultItem } from "@/app/actions/player/search-court-action";
+import { Button } from "@/components/ui/button";
+import { X, Filter } from "lucide-react";
 
 export default function VenuesClientSection({
   initialCity,
@@ -15,8 +17,9 @@ export default function VenuesClientSection({
 }) {
   const [items, setItems] = useState<SearchCourtsResultItem[]>(initialItems);
   const [loading, setLoading] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Update items when city changes
+  // Update items when filters change
   async function handleApply(filters: {
     q: string;
     selected: string[];
@@ -42,12 +45,35 @@ export default function VenuesClientSection({
 
     setItems(res.items);
     setLoading(false);
+
+    // If we applied from mobile, close the side panel
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
   }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <aside className="lg:col-span-4 xl:col-span-3">
+      {/* Mobile: Filters button (visible only on small screens) */}
+      <div className="lg:hidden col-span-1">
+        <div className="flex items-center justify-between mb-2">
+          <Button
+            className="flex items-center gap-2"
+            onClick={() => setMobileOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={mobileOpen}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Sidebar: hidden on mobile, visible on lg+ */}
+      <aside className="hidden lg:block lg:col-span-4 xl:col-span-3">
         <FiltersSidebar onApply={handleApply} />
       </aside>
+
       <main className="lg:col-span-8 xl:col-span-9">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -62,6 +88,39 @@ export default function VenuesClientSection({
           <ResultsGrid items={items ?? []} />
         )}
       </main>
+
+      {/* Mobile side panel / drawer (only visible on small screens when mobileOpen) */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={`fixed inset-0 z-50 lg:hidden ${
+          mobileOpen ? "block" : "hidden"
+        }`}
+      >
+        {/* Scrim */}
+        <div
+          className="absolute inset-0 bg-black/40"
+          onClick={() => setMobileOpen(false)}
+        />
+
+        {/* Panel */}
+        <div className="absolute right-0 top-0 h-full w-full max-w-sm bg-card shadow-xl overflow-auto">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-medium">Filters</h3>
+            <Button
+              variant="ghost"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close filters"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="p-4">
+            <FiltersSidebar onApply={handleApply} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

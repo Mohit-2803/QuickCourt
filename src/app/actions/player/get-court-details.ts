@@ -40,6 +40,7 @@ export type CourtDetailsResult =
       reviews: Array<{
         id: number;
         user: string;
+        avatarUrl: string | null;
         rating: number;
         text: string | null;
         createdAt: string;
@@ -123,7 +124,7 @@ export async function getCourtDetails(
       rating: true,
       comment: true,
       createdAt: true,
-      user: { select: { fullName: true } },
+      user: { select: { fullName: true, avatarUrl: true } },
     },
   });
 
@@ -176,10 +177,11 @@ export async function getCourtDetails(
         rating: number;
         comment: string | null;
         createdAt: Date;
-        user: { fullName: string };
+        user: { fullName: string; avatarUrl: string | null };
       }) => ({
         id: r.id,
         user: r.user.fullName,
+        avatarUrl: r.user.avatarUrl,
         rating: r.rating,
         text: r.comment,
         createdAt: r.createdAt.toISOString(),
