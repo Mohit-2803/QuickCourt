@@ -133,7 +133,7 @@ export async function getManagerDashboardData(): Promise<ManagerDashboardData> {
       select: { amount: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
-    // Recent bookings list
+    // Recent bookings list (limited to 5)
     prisma.booking.findMany({
       where: { ...ownerScope },
       include: {
@@ -141,7 +141,7 @@ export async function getManagerDashboardData(): Promise<ManagerDashboardData> {
         court: true,
       },
       orderBy: { createdAt: "desc" },
-      take: 8,
+      take: 5,
     }),
     // Calendar bookings: next 30 days
     prisma.booking.findMany({

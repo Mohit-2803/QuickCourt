@@ -1,21 +1,19 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-// Public routes (no authentication required)
 const publicRoutes = [
   "/",
   "/about",
   "/venues",
   "/contact",
   "/login",
-  "/register",
+  "/signup",
   "/forgot-password",
   "/reset-password",
   "/verify",
   "/api/auth",
 ];
 
-// Check if route is public
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
