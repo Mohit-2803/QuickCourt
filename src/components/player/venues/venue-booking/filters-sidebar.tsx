@@ -1,3 +1,4 @@
+// components/player/venues/venue-booking/filters-sidebar.tsx
 "use client";
 
 import { useState } from "react";
@@ -29,12 +30,16 @@ export function FiltersSidebar({
     selected: string[];
     price: [number, number];
     rating: string;
+    sort: "relevance" | "price_asc" | "price_desc";
   }) => void;
 }) {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [price, setPrice] = useState<[number, number]>([300, 1500]);
   const [rating, setRating] = useState<string>("any");
+  const [sort, setSort] = useState<"relevance" | "price_asc" | "price_desc">(
+    "relevance"
+  );
 
   function toggleSport(s: string) {
     setSelected((prev) =>
@@ -47,6 +52,7 @@ export function FiltersSidebar({
     setSelected([]);
     setPrice([300, 1500]);
     setRating("any");
+    setSort("relevance");
   }
 
   return (
@@ -134,6 +140,41 @@ export function FiltersSidebar({
           </RadioGroup>
         </div>
 
+        <div className="space-y-3">
+          <Label>Sort by</Label>
+          <RadioGroup
+            value={sort}
+            onValueChange={(v) =>
+              setSort(v as "relevance" | "price_asc" | "price_desc")
+            }
+          >
+            <div className="flex items-center gap-2">
+              <RadioGroupItem
+                id="s-rel"
+                value="relevance"
+                className="cursor-pointer"
+              />
+              <Label htmlFor="s-rel">Relevance</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem
+                id="s-asc"
+                value="price_asc"
+                className="cursor-pointer"
+              />
+              <Label htmlFor="s-asc">Price: Low → High</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem
+                id="s-desc"
+                value="price_desc"
+                className="cursor-pointer"
+              />
+              <Label htmlFor="s-desc">Price: High → Low</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -145,6 +186,7 @@ export function FiltersSidebar({
                 selected: [],
                 price: [300, 1500],
                 rating: "any",
+                sort: "relevance",
               });
             }}
           >
@@ -152,7 +194,7 @@ export function FiltersSidebar({
           </Button>
           <Button
             className="bg-orange-600 cursor-pointer hover:bg-orange-700"
-            onClick={() => onApply({ q, selected, price, rating })}
+            onClick={() => onApply({ q, selected, price, rating, sort })}
           >
             Apply
           </Button>

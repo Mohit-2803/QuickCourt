@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid email" }, { status: 400 });
     }
 
-    // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -31,16 +30,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate a secure random token (32 bytes hex)
     const token = crypto.randomBytes(32).toString("hex");
 
-    // Hash the token before storing
     const tokenHash = await bcrypt.hash(token, SALT_ROUNDS);
 
     const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MINUTES * 60 * 1000);
 
-    // Create or update password reset token in DB
-    // Clear previous tokens for this user
     await prisma.passwordResetToken.deleteMany({
       where: { userId: user.id, used: false },
     });

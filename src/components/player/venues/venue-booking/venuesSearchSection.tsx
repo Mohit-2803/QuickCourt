@@ -1,3 +1,4 @@
+// components/venues/booking/venues-client-section.tsx (or wherever your file is)
 "use client";
 
 import { useState } from "react";
@@ -18,11 +19,13 @@ export default function VenuesClientSection({
   const [items, setItems] = useState<SearchCourtsResultItem[]>(initialItems);
   const [loading, setLoading] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
   async function handleApply(filters: {
     q: string;
     selected: string[];
     price: [number, number];
     rating: string;
+    sort: "relevance" | "price_asc" | "price_desc";
   }) {
     setLoading(true);
     const minRating =

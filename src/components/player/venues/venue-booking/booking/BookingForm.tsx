@@ -192,67 +192,69 @@ export default function BookingForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="startHour"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start Time</FormLabel>
-              <FormControl>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="cursor-pointer">
-                    <SelectValue placeholder="Select start hour" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hourOptions.map((hour) => (
-                      <SelectItem
-                        key={hour}
-                        value={hour}
-                        className="cursor-pointer"
-                      >
-                        {`${Number(hour) % 12 || 12}:00 ${
-                          Number(hour) >= 12 ? "PM" : "AM"
-                        }`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2">
+          <FormField
+            control={form.control}
+            name="startHour"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start Time</FormLabel>
+                <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="cursor-pointer">
+                      <SelectValue placeholder="Select start hour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hourOptions.map((hour) => (
+                        <SelectItem
+                          key={hour}
+                          value={hour}
+                          className="cursor-pointer"
+                        >
+                          {`${Number(hour) % 12 || 12}:00 ${
+                            Number(hour) >= 12 ? "PM" : "AM"
+                          }`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="endHour"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>End Time</FormLabel>
-              <FormControl>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="cursor-pointer">
-                    <SelectValue placeholder="Select end hour" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hourOptions.map((hour) => (
-                      <SelectItem
-                        key={hour}
-                        value={hour}
-                        className="cursor-pointer"
-                      >
-                        {`${Number(hour) % 12 || 12}:00 ${
-                          Number(hour) >= 12 ? "PM" : "AM"
-                        }`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="endHour"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>End Time</FormLabel>
+                <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="cursor-pointer">
+                      <SelectValue placeholder="Select end hour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hourOptions.map((hour) => (
+                        <SelectItem
+                          key={hour}
+                          value={hour}
+                          className="cursor-pointer"
+                        >
+                          {`${Number(hour) % 12 || 12}:00 ${
+                            Number(hour) >= 12 ? "PM" : "AM"
+                          }`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
