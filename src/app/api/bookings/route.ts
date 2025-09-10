@@ -25,6 +25,112 @@ async function slotOverlaps(
   });
 }
 
+// GET method to fetch booked time slots for a court on a specific date
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const courtId = searchParams.get("courtId");
+    const date = searchParams.get("date");
+
+    console.log("GET /api/bookings - Params:", { courtId, date });
+
+    if (!courtId || !date) {
+      return NextResponse.json(
+        { error: "courtId and date are required" },
+        { status: 400 }
+      );
+    }
+
+    // Parse the date and create start/end of day boundaries (UTC) to avoid timezone drift
+    // Expect date as YYYY-MM-DD; construct UTC midnight range explicitly
+    const ymdMatch = /^\d{4}-\d{2}-\d{2}$/.test(date);
+    let startOfDay: Date;
+    let endOfDay: Date;
+    let selectedDate: Date;
+
+    if (ymdMatch) {
+      // Use UTC range for the provided calendar day
+      selectedDate = new Date(date);
+      startOfDay = new Date(`${date}T00:00:00.000Z`);
+      endOfDay = new Date(`${date}T23:59:59.999Z`);
+    } else {
+      selectedDate = new Date(date);
+      if (isNaN(selectedDate.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid date format" },
+          { status: 400 }
+        );
+      }
+      startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+    }
+
+    console.log("Date boundaries:", {
+      selectedDate: selectedDate.toISOString(),
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString(),
+    });
+
+    // Fetch all confirmed/pending/completed bookings for the court on the selected date
+    // Use the same overlap logic as slotOverlaps to catch all bookings that affect this day
+    const bookings = await prisma.booking.findMany({
+      where: {
+        courtId: parseInt(courtId),
+        status: { in: ["CONFIRMED", "COMPLETED", "PENDING"] },
+        startTime: { lt: endOfDay },
+        endTime: { gt: startOfDay },
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+        status: true,
+      },
+      orderBy: {
+        startTime: "asc",
+      },
+    });
+
+    console.log("Database query results:", {
+      courtIdParsed: parseInt(courtId),
+      bookingsFound: bookings.length,
+      bookings: bookings.map((b) => ({
+        startTime: b.startTime.toISOString(),
+        endTime: b.endTime.toISOString(),
+        status: b.status,
+      })),
+    });
+
+    // Convert bookings to a simpler format with hour slots
+    const bookedSlots = bookings.map((booking) => {
+      const startHour = booking.startTime.getHours();
+      const endHour = booking.endTime.getHours();
+
+      // Generate all blocked hours between start and end
+      const blockedHours = [];
+      for (let hour = startHour; hour < endHour; hour++) {
+        blockedHours.push(hour);
+      }
+
+      return {
+        startHour,
+        endHour,
+        status: booking.status,
+        blockedHours, // Add array of all blocked hours
+      };
+    });
+
+    return NextResponse.json({ bookedSlots });
+  } catch (error: unknown) {
+    console.error("Error fetching booked slots:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch booked slots" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   Form,
@@ -40,6 +41,13 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
+type BookedSlot = {
+  startHour: number;
+  endHour: number;
+  status: string;
+  blockedHours: number[];
+};
+
 export default function BookingForm({
   courtId,
   openTime,
@@ -47,6 +55,8 @@ export default function BookingForm({
 }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
+  const [fetchingSlots, setFetchingSlots] = useState(false);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -60,6 +70,111 @@ export default function BookingForm({
 
   const startHour = form.watch("startHour");
   const endHour = form.watch("endHour");
+  const selectedDate = form.watch("date");
+
+  // Function to fetch booked slots for a specific date
+  const fetchBookedSlots = useCallback(
+    async (date: Date) => {
+      setFetchingSlots(true);
+      try {
+        // Build YYYY-MM-DD in local calendar to avoid UTC shift
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        const dateStr = `${y}-${m}-${d}`;
+        const response = await fetch(
+          `/api/bookings?courtId=${courtId}&date=${dateStr}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Fetched booked slots:", data.bookedSlots);
+          setBookedSlots(data.bookedSlots || []);
+        } else {
+          console.error("Failed to fetch booked slots:", response.statusText);
+          setBookedSlots([]);
+        }
+      } catch (error) {
+        console.error("Error fetching booked slots:", error);
+        setBookedSlots([]);
+      } finally {
+        setFetchingSlots(false);
+      }
+    },
+    [courtId]
+  );
+
+  // Helper function to check if a time slot is booked
+  const isHourBooked = useCallback(
+    (hour: number) => {
+      return bookedSlots.some((slot) => {
+        // Use blockedHours array if available, otherwise fall back to range check
+        if (slot.blockedHours && slot.blockedHours.length > 0) {
+          return slot.blockedHours.includes(hour);
+        }
+        // Fallback: Check if the hour falls within any booked slot
+        return hour >= slot.startHour && hour < slot.endHour;
+      });
+    },
+    [bookedSlots]
+  );
+
+  // Helper function to check if a time range conflicts with existing bookings
+  const hasConflict = useCallback(
+    (startHr: number, endHr: number) => {
+      return bookedSlots.some((slot) => {
+        // Check for overlap: (startHr < slot.endHour) && (endHr > slot.startHour)
+        return startHr < slot.endHour && endHr > slot.startHour;
+      });
+    },
+    [bookedSlots]
+  );
+
+  // Generate all possible hour options
+  const hourOptions: string[] = [];
+  for (let h = openTime; h < closeTime; h++) {
+    hourOptions.push(h.toString());
+  }
+
+  // Get available hours for start time (excluding booked slots)
+  const availableStartHours = hourOptions.filter(
+    (hour) => !isHourBooked(Number(hour))
+  );
+
+  // Get available hours for end time based on selected start hour
+  const availableEndHours = hourOptions.filter((hour) => {
+    const hourNum = Number(hour);
+    const startHourNum = Number(startHour);
+
+    // End hour must be after start hour
+    if (hourNum <= startHourNum) return false;
+
+    // Check if this end hour would create a conflict
+    if (hasConflict(startHourNum, hourNum)) return false;
+
+    return true;
+  });
+
+  // Fetch booked slots when date changes
+  useEffect(() => {
+    if (selectedDate) {
+      fetchBookedSlots(selectedDate);
+    }
+  }, [selectedDate, fetchBookedSlots]);
+
+  // Auto-select first available start hour if current selection is booked
+  useEffect(() => {
+    if (
+      bookedSlots.length > 0 &&
+      startHour &&
+      isHourBooked(Number(startHour))
+    ) {
+      const firstAvailableHour = availableStartHours[0];
+      if (firstAvailableHour) {
+        form.setValue("startHour", firstAvailableHour);
+      }
+    }
+  }, [bookedSlots, startHour, availableStartHours, form, isHourBooked]);
 
   useEffect(() => {
     if (startHour && endHour) {
@@ -69,11 +184,6 @@ export default function BookingForm({
       }
     }
   }, [startHour, endHour, form, closeTime]);
-
-  const hourOptions: string[] = [];
-  for (let h = openTime; h < closeTime; h++) {
-    hourOptions.push(h.toString());
-  }
 
   async function onSubmit(data: BookingFormValues) {
     const { date, startHour, endHour, notes } = data;
@@ -90,6 +200,16 @@ export default function BookingForm({
     }
     if (startDateTime < new Date()) {
       toast.error("Start time must be in the future");
+      return;
+    }
+
+    // Check for conflicts with existing bookings
+    const startHourNum = Number(startHour);
+    const endHourNum = Number(endHour);
+    if (hasConflict(startHourNum, endHourNum)) {
+      toast.error(
+        "The selected time slot conflicts with an existing booking. Please choose a different time."
+      );
       return;
     }
 
@@ -192,69 +312,117 @@ export default function BookingForm({
           )}
         />
 
-        <div className="grid grid-cols-2">
-          <FormField
-            control={form.control}
-            name="startHour"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Time</FormLabel>
-                <FormControl>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="cursor-pointer">
-                      <SelectValue placeholder="Select start hour" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hourOptions.map((hour) => (
-                        <SelectItem
-                          key={hour}
-                          value={hour}
-                          className="cursor-pointer"
-                        >
-                          {`${Number(hour) % 12 || 12}:00 ${
-                            Number(hour) >= 12 ? "PM" : "AM"
-                          }`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {fetchingSlots ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col space-y-2">
+              <Skeleton className="h-4 w-24" /> {/* label skeleton */}
+              <Skeleton className="h-10 w-full rounded-md" />{" "}
+              {/* select skeleton */}
+            </div>
+            <div className="flex flex-col space-y-2">
+              <Skeleton className="h-4 w-24" /> {/* label skeleton */}
+              <Skeleton className="h-10 w-full rounded-md" />{" "}
+              {/* select skeleton */}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {/* Start Hour dropdown */}
+            <FormField
+              control={form.control}
+              name="startHour"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Time</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="cursor-pointer">
+                        <SelectValue placeholder="Select start hour" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hourOptions.map((hour) => {
+                          const hourNum = Number(hour);
+                          const isBooked = isHourBooked(hourNum);
+                          return (
+                            <SelectItem
+                              key={hour}
+                              value={hour}
+                              disabled={isBooked}
+                              className={`cursor-pointer ${
+                                isBooked
+                                  ? "text-red-500 opacity-50 cursor-not-allowed"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {`${hourNum % 12 || 12}:00 ${
+                                hourNum >= 12 ? "PM" : "AM"
+                              }${isBooked ? " (Booked)" : ""}`}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="endHour"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>End Time</FormLabel>
-                <FormControl>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="cursor-pointer">
-                      <SelectValue placeholder="Select end hour" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hourOptions.map((hour) => (
-                        <SelectItem
-                          key={hour}
-                          value={hour}
-                          className="cursor-pointer"
-                        >
-                          {`${Number(hour) % 12 || 12}:00 ${
-                            Number(hour) >= 12 ? "PM" : "AM"
-                          }`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            {/* End Hour dropdown */}
+            <FormField
+              control={form.control}
+              name="endHour"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Time</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="cursor-pointer">
+                        <SelectValue placeholder="Select end hour" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hourOptions.map((hour) => {
+                          const hourNum = Number(hour);
+                          const startHourNum = Number(startHour);
+                          const isAfterStart = hourNum > startHourNum;
+                          const wouldConflict =
+                            isAfterStart && hasConflict(startHourNum, hourNum);
+                          const isAvailable = availableEndHours.includes(hour);
+
+                          return (
+                            <SelectItem
+                              key={hour}
+                              value={hour}
+                              disabled={!isAfterStart || wouldConflict}
+                              className={`cursor-pointer ${
+                                !isAfterStart || wouldConflict
+                                  ? "text-gray-400 opacity-50 cursor-not-allowed"
+                                  : isAvailable
+                                  ? "text-green-600"
+                                  : "text-yellow-600"
+                              }`}
+                            >
+                              {`${hourNum % 12 || 12}:00 ${
+                                hourNum >= 12 ? "PM" : "AM"
+                              }${
+                                !isAfterStart
+                                  ? " (Invalid)"
+                                  : wouldConflict
+                                  ? " (Conflicts)"
+                                  : ""
+                              }`}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}
@@ -273,9 +441,10 @@ export default function BookingForm({
         <Button
           type="submit"
           className="w-full cursor-pointer"
-          disabled={loading}
+          disabled={loading || fetchingSlots}
         >
-          {loading ? "Booking..." : "Book Now"}
+          {/* here if fetching time slots, disable button */}
+          {loading || fetchingSlots ? "Waiting" : "Book Now"}
         </Button>
       </form>
     </Form>
