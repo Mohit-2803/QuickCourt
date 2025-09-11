@@ -73,8 +73,6 @@ export async function GET(req: Request) {
       endOfDay: endOfDay.toISOString(),
     });
 
-    // Fetch all confirmed/pending/completed bookings for the court on the selected date
-    // Use the same overlap logic as slotOverlaps to catch all bookings that affect this day
     const bookings = await prisma.booking.findMany({
       where: {
         courtId: parseInt(courtId),
@@ -102,24 +100,12 @@ export async function GET(req: Request) {
       })),
     });
 
-    // Convert bookings to a simpler format with hour slots
-    const bookedSlots = bookings.map((booking) => {
-      const startHour = booking.startTime.getHours();
-      const endHour = booking.endTime.getHours();
-
-      // Generate all blocked hours between start and end
-      const blockedHours = [];
-      for (let hour = startHour; hour < endHour; hour++) {
-        blockedHours.push(hour);
-      }
-
-      return {
-        startHour,
-        endHour,
-        status: booking.status,
-        blockedHours, // Add array of all blocked hours
-      };
-    });
+    // Return ISO strings only — no .getHours() on the server
+    const bookedSlots = bookings.map((booking) => ({
+      startTime: booking.startTime.toISOString(),
+      endTime: booking.endTime.toISOString(),
+      status: booking.status,
+    }));
 
     return NextResponse.json({ bookedSlots });
   } catch (error: unknown) {

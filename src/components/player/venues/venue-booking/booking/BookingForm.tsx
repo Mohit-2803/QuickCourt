@@ -28,8 +28,8 @@ import { Button } from "@/components/ui/button";
 
 interface BookingFormProps {
   courtId: number;
-  openTime: number; // e.g. 9
-  closeTime: number; // e.g. 21
+  openTime: number;
+  closeTime: number;
 }
 
 const bookingSchema = z.object({
@@ -72,30 +72,84 @@ export default function BookingForm({
   const endHour = form.watch("endHour");
   const selectedDate = form.watch("date");
 
-  // Function to fetch booked slots for a specific date
+  // Helpers
+  const formatDateYMD = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
   const fetchBookedSlots = useCallback(
     async (date: Date) => {
       setFetchingSlots(true);
       try {
-        // Build YYYY-MM-DD in local calendar to avoid UTC shift
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        const dateStr = `${y}-${m}-${d}`;
-        const response = await fetch(
+        const dateStr = formatDateYMD(date);
+        const res = await fetch(
           `/api/bookings?courtId=${courtId}&date=${dateStr}`
         );
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Fetched booked slots:", data.bookedSlots);
-          setBookedSlots(data.bookedSlots || []);
-        } else {
-          console.error("Failed to fetch booked slots:", response.statusText);
+        if (!res.ok) {
+          console.error(
+            "Failed to fetch booked slots:",
+            res.status,
+            res.statusText
+          );
           setBookedSlots([]);
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching booked slots:", error);
+
+        const data = await res.json();
+
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const computedSlots: BookedSlot[] = (data.bookedSlots || [])
+          .map((b: { startTime: string; endTime: string; status: string }) => {
+            const start = new Date(b.startTime);
+            const end = new Date(b.endTime);
+
+            if (end <= dayStart || start >= dayEnd) return null;
+
+            const clampedStartTime = Math.max(
+              start.getTime(),
+              dayStart.getTime()
+            );
+            const clampedEndTime = Math.min(end.getTime(), dayEnd.getTime());
+
+            const clampedStart = new Date(clampedStartTime);
+            const clampedEnd = new Date(clampedEndTime);
+
+            const startHourLocal = clampedStart.getHours();
+            let endHourLocal = clampedEnd.getHours();
+            if (
+              clampedEnd.getMinutes() > 0 ||
+              clampedEnd.getSeconds() > 0 ||
+              clampedEnd.getMilliseconds() > 0
+            ) {
+              endHourLocal = endHourLocal + 1;
+            }
+            if (endHourLocal > 24) endHourLocal = 24;
+
+            const blockedHours: number[] = [];
+            for (let h = startHourLocal; h < endHourLocal; h++) {
+              if (h >= 0 && h <= 23) blockedHours.push(h);
+            }
+
+            return {
+              startHour: startHourLocal,
+              endHour: endHourLocal,
+              status: b.status,
+              blockedHours,
+            } as BookedSlot;
+          })
+          .filter(Boolean) as BookedSlot[];
+
+        setBookedSlots(computedSlots);
+      } catch (err) {
+        console.error("Error fetching booked slots:", err);
         setBookedSlots([]);
       } finally {
         setFetchingSlots(false);
@@ -104,65 +158,54 @@ export default function BookingForm({
     [courtId]
   );
 
-  // Helper function to check if a time slot is booked
   const isHourBooked = useCallback(
     (hour: number) => {
       return bookedSlots.some((slot) => {
-        // Use blockedHours array if available, otherwise fall back to range check
         if (slot.blockedHours && slot.blockedHours.length > 0) {
           return slot.blockedHours.includes(hour);
         }
-        // Fallback: Check if the hour falls within any booked slot
         return hour >= slot.startHour && hour < slot.endHour;
       });
     },
     [bookedSlots]
   );
 
-  // Helper function to check if a time range conflicts with existing bookings
   const hasConflict = useCallback(
     (startHr: number, endHr: number) => {
       return bookedSlots.some((slot) => {
-        // Check for overlap: (startHr < slot.endHour) && (endHr > slot.startHour)
         return startHr < slot.endHour && endHr > slot.startHour;
       });
     },
     [bookedSlots]
   );
 
-  // Generate all possible hour options
-  const hourOptions: string[] = [];
+  const startHourOptions: string[] = [];
   for (let h = openTime; h < closeTime; h++) {
-    hourOptions.push(h.toString());
+    startHourOptions.push(h.toString()); // last start = closeTime - 1
   }
 
-  // Get available hours for start time (excluding booked slots)
-  const availableStartHours = hourOptions.filter(
+  const endHourOptions: string[] = [];
+  for (let h = openTime + 1; h <= closeTime; h++) {
+    endHourOptions.push(h.toString()); // end can equal closeTime
+  }
+
+  const availableStartHours = startHourOptions.filter(
     (hour) => !isHourBooked(Number(hour))
   );
-
-  // Get available hours for end time based on selected start hour
-  const availableEndHours = hourOptions.filter((hour) => {
+  const availableEndHours = endHourOptions.filter((hour) => {
     const hourNum = Number(hour);
     const startHourNum = Number(startHour);
-
-    // End hour must be after start hour
     if (hourNum <= startHourNum) return false;
-
-    // Check if this end hour would create a conflict
     if (hasConflict(startHourNum, hourNum)) return false;
-
     return true;
   });
 
-  // Fetch booked slots when date changes
   useEffect(() => {
     if (selectedDate) {
       fetchBookedSlots(selectedDate);
     }
   }, [selectedDate, fetchBookedSlots]);
 
-  // Auto-select first available start hour if current selection is booked
   useEffect(() => {
     if (
       bookedSlots.length > 0 &&
@@ -172,9 +215,18 @@ export default function BookingForm({
       const firstAvailableHour = availableStartHours[0];
       if (firstAvailableHour) {
         form.setValue("startHour", firstAvailableHour);
+        const nextHour = Math.min(Number(firstAvailableHour) + 1, closeTime);
+        form.setValue("endHour", nextHour.toString());
       }
     }
-  }, [bookedSlots, startHour, availableStartHours, form, isHourBooked]);
+  }, [
+    bookedSlots,
+    startHour,
+    availableStartHours,
+    form,
+    isHourBooked,
+    closeTime,
+  ]);
 
   useEffect(() => {
     if (startHour && endHour) {
@@ -203,7 +255,6 @@ export default function BookingForm({
       return;
     }
 
-    // Check for conflicts with existing bookings
     const startHourNum = Number(startHour);
     const endHourNum = Number(endHour);
     if (hasConflict(startHourNum, endHourNum)) {
@@ -231,29 +282,24 @@ export default function BookingForm({
         }),
       });
 
-      // ALWAYS attempt to parse JSON, regardless of `res.ok`
-      // This way, even error responses with JSON bodies can be handled
       let resData;
       try {
         resData = await res.json();
       } catch (jsonError) {
-        // If parsing fails, it's likely an empty or malformed non-JSON response
-        // This is where your original SyntaxError was coming from
         toast.error("Server responded with malformed data or no data.");
         setLoading(false);
         console.error("JSON parsing error:", jsonError);
-        return; // Stop execution here as we can't process the response
+        return;
       }
 
       if (res.ok) {
         if (resData.url) {
-          window.location.href = resData.url; // Redirect to Stripe Checkout
+          window.location.href = resData.url;
         } else {
-          toast.error("Payment URL not received from a successful booking."); // More specific message
+          toast.error("Payment URL not received from a successful booking.");
           setLoading(false);
         }
       } else {
-        // Now resData is guaranteed to exist and be an object if the `res.json()` didn't throw
         if (res.status === 409) {
           toast.error(resData.error || "This time slot is already booked.");
         } else if (res.status === 404) {
@@ -315,19 +361,17 @@ export default function BookingForm({
         {fetchingSlots ? (
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col space-y-2">
-              <Skeleton className="h-4 w-24" /> {/* label skeleton */}
-              <Skeleton className="h-10 w-full rounded-md" />{" "}
-              {/* select skeleton */}
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full rounded-md" />
             </div>
             <div className="flex flex-col space-y-2">
-              <Skeleton className="h-4 w-24" /> {/* label skeleton */}
-              <Skeleton className="h-10 w-full rounded-md" />{" "}
-              {/* select skeleton */}
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full rounded-md" />
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {/* Start Hour dropdown */}
+            {/* Start */}
             <FormField
               control={form.control}
               name="startHour"
@@ -340,7 +384,7 @@ export default function BookingForm({
                         <SelectValue placeholder="Select start hour" />
                       </SelectTrigger>
                       <SelectContent>
-                        {hourOptions.map((hour) => {
+                        {startHourOptions.map((hour) => {
                           const hourNum = Number(hour);
                           const isBooked = isHourBooked(hourNum);
                           return (
@@ -368,7 +412,7 @@ export default function BookingForm({
               )}
             />
 
-            {/* End Hour dropdown */}
+            {/* End */}
             <FormField
               control={form.control}
               name="endHour"
@@ -381,7 +425,7 @@ export default function BookingForm({
                         <SelectValue placeholder="Select end hour" />
                       </SelectTrigger>
                       <SelectContent>
-                        {hourOptions.map((hour) => {
+                        {endHourOptions.map((hour) => {
                           const hourNum = Number(hour);
                           const startHourNum = Number(startHour);
                           const isAfterStart = hourNum > startHourNum;
@@ -443,7 +487,6 @@ export default function BookingForm({
           className="w-full cursor-pointer"
           disabled={loading || fetchingSlots}
         >
-          {/* here if fetching time slots, disable button */}
           {loading || fetchingSlots ? "Waiting" : "Book Now"}
         </Button>
       </form>
