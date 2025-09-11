@@ -38,7 +38,6 @@ export function VenuesHero({ images }: { images: string[] }) {
   const [navigating, setNavigating] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // ---- Carousel autoplay ----
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -117,16 +116,13 @@ export function VenuesHero({ images }: { images: string[] }) {
     const city = s.formatted?.split(",")[0] || s.city || s.name || "";
     setQuery(city);
 
-    // Update the city context
     setCity(city);
 
-    // Navigate to venue booking with the selected city
     router.push(`/venues/venue-booking?city=${encodeURIComponent(city)}`);
   }
 
   return (
     <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-      {/* Left section: search */}
       <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col justify-center">
         <h1 className="text-2xl md:text-3xl font-semibold">
           Find sports venues near you

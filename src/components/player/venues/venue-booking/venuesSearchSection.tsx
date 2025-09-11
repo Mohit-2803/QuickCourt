@@ -7,6 +7,8 @@ import { ResultsGrid } from "@/components/player/venues/venue-booking/results-gr
 import { searchCourts } from "@/app/actions/player/search-court-action";
 import type { SearchCourtsResultItem } from "@/app/actions/player/search-court-action";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { X, Filter } from "lucide-react";
 
 export default function VenuesClientSection({
@@ -74,14 +76,47 @@ export default function VenuesClientSection({
 
       <main className="lg:col-span-8 xl:col-span-9">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-64 rounded-2xl bg-muted animate-pulse"
-              />
-            ))}
-          </div>
+          <section className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <Card
+                  key={i}
+                  className="overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm py-0 pb-6"
+                >
+                  <Skeleton className="h-40 w-full" />
+
+                  <CardContent className="pt-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-5 w-32" />
+                      </div>
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <Skeleton
+                          key={j}
+                          className="h-3.5 w-3.5 rounded-full"
+                        />
+                      ))}
+                      <Skeleton className="h-3 w-12 ml-1" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </CardContent>
+
+                  <CardFooter>
+                    <Skeleton className="h-9 w-full" />
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </section>
         ) : (
           <ResultsGrid items={items ?? []} />
         )}

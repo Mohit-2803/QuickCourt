@@ -59,7 +59,8 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div className="lg:w-1/2 relative w-full h-80 md:h-[28rem] rounded-3xl overflow-hidden">
+        {/* hide hero image in phone */}
+        <div className="lg:w-1/2 relative w-full h-80 md:h-[28rem] rounded-3xl overflow-hidden hidden lg:block">
           <Image
             src="/home_3.jpg"
             alt="Sports court booking illustration"
